@@ -9,7 +9,8 @@
 
 class SimpleChunkCreator : public ChunkCreator
 {
-	num chunk_byte_size = 8LL * 1024LL * 1024LL * 1024LL;
+	//num chunk_byte_size = 8LL * 1024LL * 1024LL * 1024LL;
+	num chunk_byte_size = 50LL;
 	void ReadChunk(std::ifstream& input_file, num &line_number, Chunk& chunk) const
 	{
 		std::string line = "";
@@ -25,11 +26,11 @@ class SimpleChunkCreator : public ChunkCreator
 		}
 	}
 
-	void SaveChunk(const Chunk& chunk, const std::string& chunk_name)
+	void SaveChunk(const Chunk& chunk, const std::string& chunk_name) const
 	{
-		std::basic_ofstream<> output_file(chunk_name);
-		for (const Entry& e : chunk)
-			output_file.write(e);
+		std::fstream output_file(chunk_name, std::ios_base::out);
+		output_file.write(reinterpret_cast<char*>(chunk.begin()), chunk.ByteSize());
+		output_file.close();
 	}
 
 
@@ -37,19 +38,20 @@ class SimpleChunkCreator : public ChunkCreator
 	{
 		for (size_t i = start; i < end; i++)
 		{
-			num min = chunk[i];
+			num min = chunk[i].GetVal();
 			num min_index = i;
 			for (size_t st_m = i + 1; st_m < end; st_m++)
 			{
-				if (min > chunk[st_m])
+				if (min > chunk[st_m].GetVal())
 				{
-					min = chunk[st_m];
+					min = chunk[st_m].GetVal();
 					min_index = st_m;
 				}
 			}
 
+			auto temp = chunk[min_index];
 			chunk[min_index] = chunk[i];
-			chunk[i] = min;
+			chunk[i] = temp;
 		}
 	}
 
@@ -62,20 +64,20 @@ class SimpleChunkCreator : public ChunkCreator
 			return;
 		}
 
-		num pivot = chunk[0];
+		num pivot = chunk[0].GetVal();
 		
 		num i = start;
 		num j = end - 1;
 
 		while (i < j)
 		{
-			while (chunk[i] < pivot)
+			while (chunk[i].GetVal() < pivot)
 				i++;
 
-			while (chunk[j] > pivot)
+			while (chunk[j].GetVal() > pivot)
 				j--;
 
-			num temp = chunk[j];
+			auto temp = chunk[j];
 			chunk[j] = chunk[i];
 			chunk[i] = temp;
 		}
@@ -89,15 +91,15 @@ public:
 	bool Create(std::ifstream& input_file, num &line_number, const std::string &chunk_name) override
 	{
 		Chunk chunk(chunk_byte_size);
-		ReadChunk(input_file, line_number, chunk);
+ 		ReadChunk(input_file, line_number, chunk);
 
-		std::sort(chunk.begin(), chunk.end(), [](const Entry& e1, const Entry& e2){
+/*		std::sort(chunk.begin(), chunk.end(), [](const Entry& e1, const Entry& e2){
 			return e1.GetVal() - e2.GetVal();
-		});
+		})*/;
 
 		QuickSort(chunk, 0, chunk.Size());
 
-		SaveChunk(chunk_name);
+		SaveChunk(chunk, chunk_name);
 		return true;
 	}
 };

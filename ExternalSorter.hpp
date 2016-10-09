@@ -2,12 +2,14 @@
 #define External_Sorter_
 
 #include <iostream>
+#include <cmath>
 #include <fstream>
 #include <memory>
 #include <string>
 #include <algorithm>
 #include "ChunkCreator.h"
 #include "Types.h"
+#include "Entry.h"
 
 
 class ExternalSorter
@@ -22,65 +24,80 @@ public:
 		this->chunkCreator = std::move(chunkCreator);
 	}
 
-	void CreateSortedChunks(std::ifstream& input_file) const
+	num CreateSortedChunks(std::ifstream& input_file) const
 	{
 		num line_number = 1;
 		num chunk_index = 0;
 		while (!input_file.eof())
 		{
-			chunkCreator->Create(input_file, line_number, "chunk_" + std::to_string(chunk_index));
+			chunkCreator->Create(input_file, line_number, "chunk_0_" + std::to_string(chunk_index));
 			chunk_index++;
 		}
+		return chunk_index;
 	}
 
-	void ExternalMergeSort() const
+	void ExternalMergeSort(num chunks_count) 
 	{
-		num leaves_number = xxxxx;
+		num max_layer = static_cast<num>(log2(static_cast<long double>(chunks_count)));
 
-
+		MergeSort(max_layer, 0);
 	}
 
 	void MergeSort(num layer, num offset)
 	{
-		if(layer == 0)
+		if (layer == 0)
 			return;
 
 		MergeSort(layer - 1, offset);
 		MergeSort(layer - 1, offset + 1);
 
-		std::ifstream chunk1("chunk" + layer + "_" + offset);
-		std::ifstream chunk2("chunk" + layer + "_" + offset + 1);
-		std::ifstream ouptput_chunk("chunk" + layer + 1 + "_" + offset);
+		std::ifstream chunk1("chunk_" + std::to_string(layer - 1) + "_" + std::to_string(offset));
+		std::ifstream chunk2("chunk_" + std::to_string(layer - 1) + "_" + std::to_string(offset + 1));
+		std::ofstream output_chunk("chunk_" + std::to_string(layer) + "_" + std::to_string(offset));
 
 
-		while(chunk1.is_open() && chunk2.is_open())
+		while (!chunk1.eof() && !chunk2.eof())
 		{
-			Entry e1 = chunk1.peek();
-			Entry e2 = chunk2.peek();
+			char buf[sizeof(Entry)];
+			chunk1.read(buf, sizeof(Entry));
+			Entry e1 = *reinterpret_cast<Entry*>(buf);
 
-			if(e1.GetVal() <= e2.GetVal())
+			chunk2.read(buf, sizeof(Entry));
+			Entry e2 = *reinterpret_cast<Entry*>(buf);
+
+			if (chunk1.fail() || chunk2.fail())
 			{
-				output_chunk.write(e1);
-				chunk1.read();
+				//TODOOOOOO end of stream not detected 
+			}
+
+			if (e1.GetVal() <= e2.GetVal())
+			{
+				output_chunk.write(reinterpret_cast<char*>(&e1), sizeof(Entry));
+				chunk2.seekg(-static_cast<off_t>(sizeof(Entry)), std::ios_base::cur);
 			}
 			else
 			{
-				output_chunk.write(e2);
-				chunk2.read();
+				output_chunk.write(reinterpret_cast<char*>(&e2), sizeof(Entry));
+				chunk1.seekg(-static_cast<off_t>(sizeof(Entry)), std::ios_base::cur);
 			}
 		}
 
-		
 		WriteRest(chunk1, output_chunk);
 		WriteRest(chunk2, output_chunk);
+
+		chunk1.close();
+		chunk2.close();
+		output_chunk.close();
 	}
 
-	void WriteRest(std::ifstream &chunk, std::ifstream &output_chunk)
+	void WriteRest(std::ifstream &chunk, std::ofstream &output_chunk)
 	{
-		while(chunk.is_open())
+		while (chunk.is_open())
 		{
-			Entry e = chunk.read();
-			output_chunk.write(e);
+			char buf[sizeof(Entry)];
+			chunk.read(buf, sizeof(Entry));
+			Entry e1 = *reinterpret_cast<Entry*>(buf);
+			output_chunk.write(reinterpret_cast<char*>(&e1), sizeof(Entry));
 		}
 	}
 
@@ -89,10 +106,10 @@ public:
 		std::ifstream input_file(filename);
 		if (input_file.is_open())
 		{
-			CreateSortedChunks(input_file);
+			num chunks_count = CreateSortedChunks(input_file);
 			input_file.close();
 
-			ExternalMergeSort();
+			ExternalMergeSort(chunks_count);
 		}
 		else
 		{

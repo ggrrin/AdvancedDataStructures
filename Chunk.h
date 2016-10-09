@@ -29,6 +29,11 @@ public:
 		return size;
 	}
 
+	num ByteSize() const
+	{
+		return size * sizeof(Entry);
+	}
+
 	num Capacity() const
 	{
 		return capacity;
@@ -43,9 +48,15 @@ public:
 	{
 		return chunk;
 	}
+	
 	Entry* end() const
 	{
 		return chunk + size;
+	}
+
+	Entry& operator[](num index) const
+	{
+		return  *(begin() + index);
 	}
 };
 
