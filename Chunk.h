@@ -39,11 +39,11 @@ public:
 		return size == capacity;
 	}
 
-	Entry* Begin() const
+	Entry* begin() const
 	{
 		return chunk;
 	}
-	Entry* End() const
+	Entry* end() const
 	{
 		return chunk + size;
 	}

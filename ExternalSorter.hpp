@@ -35,7 +35,53 @@ public:
 
 	void ExternalMergeSort() const
 	{
+		num leaves_number = xxxxx;
 
+
+	}
+
+	void MergeSort(num layer, num offset)
+	{
+		if(layer == 0)
+			return;
+
+		MergeSort(layer - 1, offset);
+		MergeSort(layer - 1, offset + 1);
+
+		std::ifstream chunk1("chunk" + layer + "_" + offset);
+		std::ifstream chunk2("chunk" + layer + "_" + offset + 1);
+		std::ifstream ouptput_chunk("chunk" + layer + 1 + "_" + offset);
+
+
+		while(chunk1.is_open() && chunk2.is_open())
+		{
+			Entry e1 = chunk1.peek();
+			Entry e2 = chunk2.peek();
+
+			if(e1.GetVal() <= e2.GetVal())
+			{
+				output_chunk.write(e1);
+				chunk1.read();
+			}
+			else
+			{
+				output_chunk.write(e2);
+				chunk2.read();
+			}
+		}
+
+		
+		WriteRest(chunk1, output_chunk);
+		WriteRest(chunk2, output_chunk);
+	}
+
+	void WriteRest(std::ifstream &chunk, std::ifstream &output_chunk)
+	{
+		while(chunk.is_open())
+		{
+			Entry e = chunk.read();
+			output_chunk.write(e);
+		}
 	}
 
 	void Sort()
