@@ -24,13 +24,13 @@
     <ClInclude Include="Entry.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="ExternalSorter.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="SimpleChunkCreator.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Types.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ExternalSorter.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

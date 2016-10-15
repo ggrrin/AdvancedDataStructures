@@ -64,7 +64,16 @@ public:
 
 			if (chunk1.fail() || chunk2.fail())
 			{
-				//TODOOOOOO end of stream not detected 
+				if (!chunk1.fail()) 
+				{
+					chunk1.seekg(-static_cast<off_t>(sizeof(Entry)), std::ios_base::cur);
+				}
+
+				if (!chunk2.fail()) 
+				{
+					chunk2.seekg(-static_cast<off_t>(sizeof(Entry)), std::ios_base::cur);
+				}
+				break;
 			}
 
 			if (e1.GetVal() <= e2.GetVal())
@@ -89,7 +98,7 @@ public:
 
 	void WriteRest(std::ifstream &chunk, std::ofstream &output_chunk)
 	{
-		while (chunk.is_open())
+		while (!chunk.eof())
 		{
 			char buf[sizeof(Entry)];
 			chunk.read(buf, sizeof(Entry));
