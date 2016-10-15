@@ -24,9 +24,16 @@ public:
 		return key == 0;
 	}
 
+	std::string get_string() const
+	{
+		return std::to_string(val) + " " + std::to_string(key); //TODO order of key
+	}
+
 private:
 	num key;
 	num val;
 };
+
+
 
 #endif

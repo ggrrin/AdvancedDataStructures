@@ -2,9 +2,10 @@ Debug/
 bin/
 obj/
 data.txt
+data.out
 *.opendb
-cd/
-.vs/
-**/*.sdf
+*.opensdf
+.vs/*
+*.sdf
 **/*.suo
 *.stackdump
