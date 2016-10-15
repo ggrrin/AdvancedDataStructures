@@ -14,15 +14,12 @@
 
 class ExternalSorter
 {
-	char *filename;
+	std::string filename;
 	std::unique_ptr<ChunkCreator> chunkCreator;
 
 public:
-	ExternalSorter(char *filename, std::unique_ptr<ChunkCreator> chunkCreator)
-	{
-		this->filename = filename;
-		this->chunkCreator = std::move(chunkCreator);
-	}
+	ExternalSorter(const std::string& filename_p, std::unique_ptr<ChunkCreator> chunkCreator_p)
+	: filename(filename_p), chunkCreator(std::move(chunkCreator_p)) {};
 
 	num CreateSortedChunks(std::ifstream& input_file) const
 	{

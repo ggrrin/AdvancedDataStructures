@@ -13,7 +13,7 @@ public:
 	explicit Chunk(num chunk_byte_size) : capacity(chunk_byte_size / static_cast<num>(sizeof(Entry))), chunk(new Entry[static_cast<int>(capacity)]) { }
 	virtual ~Chunk()
 	{
-		free(chunk);
+		delete chunk;
 	}
 
 	void AddEntry(Entry entry)

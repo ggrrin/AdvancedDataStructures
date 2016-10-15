@@ -1,5 +1,6 @@
-#include "ExternalSorter.hpp"
+#include "ExternalSorter.h"
 #include "SimpleChunkCreator.h"
+#include <memory>
 
 int main(int argc, char *argv[])
 {

@@ -1,8 +1,11 @@
 #ifndef entry_
 #define entry_
 
+#include "Types.h"
+
 struct Entry
 {
+public:
 	Entry() : key(0), val(0) {};
 
 	Entry(num key_p, num val_p) : key(key_p), val(val_p) {}
