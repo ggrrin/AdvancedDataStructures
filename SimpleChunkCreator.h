@@ -10,12 +10,14 @@
 class SimpleChunkCreator : public ChunkCreator
 {
 	//num chunk_byte_size = 8LL * 1024LL * 1024LL * 1024LL;
-	num chunk_byte_size = 50LL;
+	num chunk_byte_size = 1LL * 512LL * 1024LL * 1024LL;
+	//num chunk_byte_size = 50LL;
 	void ReadChunk(std::ifstream& input_file, num &line_number, Chunk& chunk) const
 	{
 		std::string line = "";
 		while (!chunk.IsFull() && !getline(input_file, line).eof())
 		{
+
 			num current_number;
 			std::stringstream ss(line);
 			ss >> current_number;
@@ -95,7 +97,10 @@ public:
 		if (chunk.Size() <= 0)
 			return false;
 
+		printf("Sorting chunk.\n");
 		QuickSort(chunk, 0, chunk.Size());
+
+		printf("Saving chunk.\n");
 		SaveChunk(chunk, chunk_name);
 		return true;
 	}

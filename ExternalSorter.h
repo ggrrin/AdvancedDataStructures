@@ -28,6 +28,7 @@ public:
 		num chunk_index = 0;
 		while (!input_file.eof())
 		{
+			printf("Creating chunk %d\n", chunk_index);
 			chunkCreator->Create(input_file, line_number, "chunk_0_" + std::to_string(chunk_index));
 			chunk_index++;
 		}
@@ -43,25 +44,40 @@ public:
 
 	void MergeSort(num layer, num offset, bool chunk_output)
 	{
+		bool first = true;
+		num last_value = 0;
+
+		std::string ch_out = !chunk_output ? "data.out" : "chunk_" + std::to_string(layer) + "_" + std::to_string(offset);
+
 		if (layer == 0)
+		{
+			if (!chunk_output)
+			{
+				std::ifstream chunk_decode("chunk_0_0");
+				std::ofstream output_decode(ch_out);
+				WriteRest(first, last_value, chunk_output, chunk_decode, output_decode);
+				chunk_decode.close();
+				output_decode.close();
+				remove("chunk_0_0");
+			}
 			return;
+		}
 
 		num left_index = 2 * offset;
 		num right_index = left_index + 1;
+		std::string ch1_path = "chunk_" + std::to_string(layer - 1) + "_" + std::to_string(left_index);
+		std::string ch2_path = "chunk_" + std::to_string(layer - 1) + "_" + std::to_string(right_index);
 
 		MergeSort(layer - 1, left_index, true);
 		MergeSort(layer - 1, right_index, true);
 
-		std::string ch1_path = "chunk_" + std::to_string(layer - 1) + "_" + std::to_string(left_index);
-		std::string ch2_path = "chunk_" + std::to_string(layer - 1) + "_" + std::to_string(right_index);
-		std::string ch_out = !chunk_output ? "data.out" : "chunk_" + std::to_string(layer) + "_" + std::to_string(offset);
 
 		std::ifstream chunk1(ch1_path);
 		std::ifstream chunk2(ch2_path);
 		std::ofstream output_chunk(ch_out);
 
-		num last_value = 0;
-		bool first = true;
+		printf("Merging on level %d chunks %s : %s\n", layer, ch1_path, ch2_path);
+
 		while (!chunk1.eof() && !chunk2.eof())
 		{
 			char buf[sizeof(Entry)];
@@ -101,7 +117,7 @@ public:
 		std::remove(ch2_path.c_str());
 	}
 
-	void write_value(bool first, num& last_value, Entry& e, bool chunk_output, std::ofstream& output_chunk, std::ifstream* seek_chunk)
+	void write_value(bool& first, num& last_value, Entry& e, bool chunk_output, std::ofstream& output_chunk, std::ifstream* seek_chunk)
 	{
 		if (first || last_value != e.GetVal())
 		{
@@ -120,9 +136,10 @@ public:
 			seek_chunk->seekg(-static_cast<off_t>(sizeof(Entry)), std::ios_base::cur);
 
 		last_value = e.GetVal();
+		first = false;
 	}
 
-	void WriteRest(bool first, num& last_value, bool chunk_output, std::ifstream &chunk, std::ofstream &output_chunk)
+	void WriteRest(bool& first, num& last_value, bool chunk_output, std::ifstream &chunk, std::ofstream &output_chunk)
 	{
 		while (chunk.is_open() && !chunk.eof())
 		{
@@ -138,9 +155,11 @@ public:
 		std::ifstream input_file(filename);
 		if (input_file.is_open())
 		{
+			printf("Creating intial chunks.\n");
 			num chunks_count = CreateSortedChunks(input_file);
 			input_file.close();
 
+			printf("Merging chunks.\n");
 			ExternalMergeSort(chunks_count);
 		}
 		else

@@ -1,6 +1,7 @@
 #include "ExternalSorter.h"
 #include "SimpleChunkCreator.h"
 #include <memory>
+#include "InputNumberStream.h"
 
 int main(int argc, char *argv[])
 {
@@ -26,8 +27,17 @@ int main(int argc, char *argv[])
 	//in.close();
 
 
-	ExternalSorter sorter("data.txt", std::make_unique<SimpleChunkCreator>());
-	sorter.Sort();
+	//ExternalSorter sorter("data.txt", std::make_unique<SimpleChunkCreator>());
+	//sorter.Sort();
+
+	InputNumberStream s("data0.txt");
+	Entry e;
+	while ((e = s.read_next()) != Entry::empty)
+	{
+		printf("%d\n", e.GetKey());
+	}
+
+	s.close();
 
 	return 0;
 }

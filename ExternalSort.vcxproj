@@ -146,10 +146,12 @@
     <ClInclude Include="ChunkCreator.h" />
     <ClInclude Include="Entry.h" />
     <ClInclude Include="ExternalSorter.h" />
+    <ClInclude Include="InputNumberStream.h" />
     <ClInclude Include="SimpleChunkCreator.h" />
     <ClInclude Include="Types.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Entry.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

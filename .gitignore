@@ -1,7 +1,7 @@
 Debug/
 bin/
 obj/
-data.txt
+data*.txt
 data.out
 *.opendb
 *.opensdf

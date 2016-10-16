@@ -9,6 +9,9 @@ public:
 	Entry() : key(0), val(0) {};
 
 	Entry(num key_p, num val_p) : key(key_p), val(val_p) {}
+
+	static Entry empty;
+
 	num GetKey() const
 	{
 		return key;
@@ -34,6 +37,18 @@ private:
 	num val;
 };
 
+
+
+bool operator==(Entry e1, Entry e2)
+{
+	return e1.GetKey() == e2.GetKey() && e1.GetVal() == e2.GetVal();
+}
+
+
+bool operator!=(Entry e1, Entry e2)
+{
+	return e1 == e2;
+}
 
 
 #endif

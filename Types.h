@@ -1,6 +1,8 @@
 #ifndef types_ 
 #define types_ 
 
-typedef unsigned long long num;
+#include <stdint.h>
+
+typedef std::uint64_t num;
 
 #endif
