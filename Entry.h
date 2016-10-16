@@ -2,6 +2,7 @@
 #define entry_
 
 #include "Types.h"
+#include <string>
 
 struct Entry
 {
@@ -32,23 +33,18 @@ public:
 		return std::to_string(val) + " " + std::to_string(key); //TODO order of key
 	}
 
+	bool operator!=(const Entry& e) const
+	{
+		return !(*this == e);
+	}
+
+	bool operator==(const Entry& e) const
+	{
+		return this->GetKey() == e.GetKey() && this->GetVal() == e.GetVal();
+	}
+
 private:
 	num key;
 	num val;
 };
-
-
-
-bool operator==(Entry e1, Entry e2)
-{
-	return e1.GetKey() == e2.GetKey() && e1.GetVal() == e2.GetVal();
-}
-
-
-bool operator!=(Entry e1, Entry e2)
-{
-	return e1 == e2;
-}
-
-
 #endif

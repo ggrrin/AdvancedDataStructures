@@ -28,7 +28,7 @@ public:
 		num chunk_index = 0;
 		while (!input_file.eof())
 		{
-			printf("Creating chunk %d\n", chunk_index);
+			printf("Creating chunk %llu\n", chunk_index);
 			chunkCreator->Create(input_file, line_number, "chunk_0_" + std::to_string(chunk_index));
 			chunk_index++;
 		}
@@ -37,7 +37,7 @@ public:
 
 	void ExternalMergeSort(num chunks_count)
 	{
-		num max_layer = ceil(log2(static_cast<long double>(chunks_count)));
+		num max_layer = static_cast<num>(ceil(log2(static_cast<long double>(chunks_count))));
 
 		MergeSort(max_layer, 0, false);
 	}
@@ -76,7 +76,7 @@ public:
 		std::ifstream chunk2(ch2_path);
 		std::ofstream output_chunk(ch_out);
 
-		printf("Merging on level %d chunks %s : %s\n", layer, ch1_path, ch2_path);
+		printf("Merging on level %llu chunks %s : %s\n", layer, ch1_path.c_str(), ch2_path.c_str());
 
 		while (!chunk1.eof() && !chunk2.eof())
 		{

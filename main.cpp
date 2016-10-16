@@ -34,7 +34,7 @@ int main(int argc, char *argv[])
 	Entry e;
 	while ((e = s.read_next()) != Entry::empty)
 	{
-		printf("%d\n", e.GetKey());
+		printf("%llu\n", e.GetKey());
 	}
 
 	s.close();

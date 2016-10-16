@@ -44,27 +44,54 @@ class InputNumberStream
 		}
 	}
 
-	num parse_num(char* str)
+	num parse_num(char* str) const
 	{
-		return 0;
+		std::string input(str);
+
+		bool overflow = false;
+
+		int res = 0;
+
+		for (size_t i = 0; i < input.length(); i++)
+		{
+			if (input[i] < '0' || input[i] > '9')
+			{
+				throw 0;
+			}
+
+			int prev = res;
+
+			res *= 10;
+			res += input[i] - '0';
+
+			if (!overflow && prev > res)
+			{
+				overflow = true;
+			}
+		}
+
+		//res &= ~0x40000000;
+		return res;
 	}
 
 public:
 	InputNumberStream(char* file_name) :
 		line(1),
-		file(fopen(file_name, "o")),
 		buf(new char[buf_capacity]),
-		buf_size(0) {};
+		line_start(buf),
+		file(fopen(file_name, "r")),
+		buf_size(0)
+	{};
 
 	~InputNumberStream()
 	{
 		close();
 	}
 
-	void close()
+	void close() 
 	{
 		fclose(file);
-		delete buf;
+		delete[] buf;
 	};
 
 	num get_line_number() const
@@ -74,13 +101,21 @@ public:
 
 	Entry read_next()
 	{
+		if (buf_size == 0)
+		{
+			if (!fill_buffer())
+				return Entry::empty;
+			else
+				line_start = buf;
+		}
+
 		current = line_start;
 		if (*current == '\0')
 			line_start++;
 
 		while (*current != '\n')
 		{
-			if (current - buf>= buf_size)
+			if (current >= buf + buf_size )
 			{
 				if (!fill_buffer())
 				{

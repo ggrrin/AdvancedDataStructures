@@ -1,7 +1,7 @@
 #ifndef types_ 
 #define types_ 
 
-#include <stdint.h>
+#include <cstdint>
 
 typedef std::uint64_t num;
 
