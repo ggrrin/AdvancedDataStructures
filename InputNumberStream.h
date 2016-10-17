@@ -9,7 +9,8 @@
 
 class InputNumberStream
 {
-	const num buf_capacity = 128;
+	const num buf_capacity = 2*1024;
+	bool closed = false;
 	num line;
 	FILE* file;
 	char* buf;
@@ -26,9 +27,9 @@ class InputNumberStream
 		for (size_t i = 0; i < len; i++)
 			*(buf + i) = *(line_start + i);
 
-		buf_size -= len;
-		line_start -= len;
-		current -= len;
+		buf_size = len;
+		line_start = buf;
+		current = buf + len - 1;
 
 		num read_num = fread((buf + buf_size), sizeof(char), buf_capacity - buf_size, file);
 		if (read_num != 0)
@@ -38,31 +39,29 @@ class InputNumberStream
 		}
 		else
 		{
-			buf_size += 1;
-			*(buf + buf_size - 1) = '\0';
 			return false;
 		}
 	}
 
 	num parse_num(char* str) const
 	{
-		std::string input(str);
+		auto length = strlen(str);
 
 		bool overflow = false;
 
-		int res = 0;
+		num res = 0;
 
-		for (size_t i = 0; i < input.length(); i++)
+		for (char* input = str; *input != '\0'; ++input)
 		{
-			if (input[i] < '0' || input[i] > '9')
+			if (*input < '0' || *input > '9')
 			{
 				throw 0;
 			}
 
-			int prev = res;
+			num prev = res;
 
 			res *= 10;
-			res += input[i] - '0';
+			res += *input - '0';
 
 			if (!overflow && prev > res)
 			{
@@ -90,8 +89,12 @@ public:
 
 	void close() 
 	{
-		fclose(file);
-		delete[] buf;
+		if (!closed)
+		{
+			fclose(file);
+			delete[] buf;
+			closed = true;
+		}
 	};
 
 	num get_line_number() const
@@ -127,13 +130,13 @@ public:
 			current++;
 		}
 		*current = '\0';
-		line++;
 
 		if (current - line_start <= 0)
 			return Entry::empty;
 
 		Entry res(line, parse_num(line_start));
 		line_start = current;
+		line++;
 		return res;
 	}
 };

@@ -3,6 +3,11 @@
 #include <memory>
 #include "InputNumberStream.h"
 
+
+
+
+
+
 int main(int argc, char *argv[])
 {
 	//char buf[] = {'a','b'};
@@ -30,14 +35,20 @@ int main(int argc, char *argv[])
 	//ExternalSorter sorter("data.txt", std::make_unique<SimpleChunkCreator>());
 	//sorter.Sort();
 
-	InputNumberStream s("data0.txt");
+
+
+	char str[201];
+
+	InputNumberStream s("data.txt");
 	Entry e;
 	while ((e = s.read_next()) != Entry::empty)
 	{
-		printf("%llu\n", e.GetKey());
+		num_to_str(e.GetVal(), str, 200);
+		printf("%s\n", str);
 	}
 
 	s.close();
 
+	//num_to_str(10000, str, 200);
 	return 0;
 }
