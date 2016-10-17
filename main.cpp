@@ -32,22 +32,22 @@ int main(int argc, char *argv[])
 	//in.close();
 
 
-	//ExternalSorter sorter("data.txt", std::make_unique<SimpleChunkCreator>());
-	//sorter.Sort();
+	ExternalSorter sorter("data.txt", std::make_unique<SimpleChunkCreator>());
+	sorter.Sort();
 
 
 
-	char str[201];
+	//char str[201];
 
-	InputNumberStream s("data.txt");
-	Entry e;
-	while ((e = s.read_next()) != Entry::empty)
-	{
-		num_to_str(e.GetVal(), str, 200);
-		printf("%s\n", str);
-	}
+	//InputNumberStream s("data.txt");
+	//Entry e;
+	//while ((e = s.read_next()) != Entry::empty)
+	//{
+	//	num_to_str(e.GetVal(), str, 200);
+	//	printf("%s\n", str);
+	//}
 
-	s.close();
+	//s.close();
 
 	//num_to_str(10000, str, 200);
 	return 0;

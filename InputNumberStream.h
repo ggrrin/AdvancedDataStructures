@@ -11,6 +11,7 @@ class InputNumberStream
 {
 	const num buf_capacity = 2*1024;
 	bool closed = false;
+	bool eof_f = false;
 	num line;
 	FILE* file;
 	char* buf;
@@ -18,6 +19,7 @@ class InputNumberStream
 
 	char* line_start;
 	char* current;
+
 
 	//shift current line to begining of the buffer and fill the buffer
 	//if read returns 0; '\0' is appended at the end of the shifted string
@@ -39,6 +41,7 @@ class InputNumberStream
 		}
 		else
 		{
+			eof_f = true;
 			return false;
 		}
 	}
@@ -74,7 +77,7 @@ class InputNumberStream
 	}
 
 public:
-	InputNumberStream(char* file_name) :
+	InputNumberStream(const char* file_name) :
 		line(1),
 		buf(new char[buf_capacity]),
 		line_start(buf),
@@ -100,6 +103,11 @@ public:
 	num get_line_number() const
 	{
 		return line;
+	}
+
+	bool eof() const
+	{
+		return eof_f;
 	}
 
 	Entry read_next()

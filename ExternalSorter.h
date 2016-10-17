@@ -11,6 +11,7 @@
 #include "ChunkCreator.h"
 #include "Types.h"
 #include "Entry.h"
+#include "InputNumberStream.h"
 
 
 class ExternalSorter
@@ -22,14 +23,13 @@ public:
 	ExternalSorter(const std::string& filename_p, std::unique_ptr<ChunkCreator> chunkCreator_p)
 		: filename(filename_p), chunkCreator(std::move(chunkCreator_p)) {};
 
-	num CreateSortedChunks(std::ifstream& input_file) const
+	num CreateSortedChunks(InputNumberStream& input_file) const
 	{
-		num line_number = 1;
 		num chunk_index = 0;
 		while (!input_file.eof())
 		{
 			printf("Creating chunk %llu\n", chunk_index);
-			chunkCreator->Create(input_file, line_number, "chunk_0_" + std::to_string(chunk_index));
+			chunkCreator->Create(input_file, "chunk_0_" + std::to_string(chunk_index));
 			chunk_index++;
 		}
 		return chunk_index;
@@ -127,8 +127,9 @@ public:
 			}
 			else
 			{
-				std::string s = e.get_string() + "\n";
-				output_chunk.write(s.c_str(), s.length());
+				char str[255];
+				auto len = e.get_string(str);
+				output_chunk.write(str, len);
 			}
 		}
 
@@ -152,20 +153,15 @@ public:
 
 	void Sort()
 	{
-		std::ifstream input_file(filename);
-		if (input_file.is_open())
-		{
-			printf("Creating intial chunks.\n");
-			num chunks_count = CreateSortedChunks(input_file);
-			input_file.close();
+		InputNumberStream input_file(filename.c_str());
 
-			printf("Merging chunks.\n");
-			ExternalMergeSort(chunks_count);
-		}
-		else
-		{
-			throw 0;
-		}
+		printf("Creating intial chunks.\n");
+		num chunks_count = CreateSortedChunks(input_file);
+
+		input_file.close();
+
+		printf("Merging chunks.\n");
+		ExternalMergeSort(chunks_count);
 	}
 
 };

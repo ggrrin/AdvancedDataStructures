@@ -28,9 +28,19 @@ public:
 		return key == 0;
 	}
 
-	std::string get_string() const
+	num get_string(char* buffer) const
 	{
-		return std::to_string(val) + " " + std::to_string(key); //TODO order of key
+		char* ptr = buffer;
+		num first = get_number_of_digits(GetKey());
+		num second = get_number_of_digits(GetVal());
+		num_to_str(val, ptr, second + 1);
+		ptr += second;
+		*ptr++ = ' ';
+		num_to_str(key, ptr, first + 1);
+		ptr = buffer + first + second + 1;
+		*ptr++ = '\n';
+		*ptr = '\0';
+		return first + second + 2;
 	}
 
 
@@ -49,12 +59,15 @@ private:
 	num key;
 	num val;
 
-	num get_number_of_digits(num number)
+	num get_number_of_digits(num number) const
 	{
+		if (number == 0)
+			return 1;
+
 		return 1 + static_cast<num>(log10(number));
 	}
 
-	bool num_to_str(num number, char* res, const num& buf_len)
+	bool num_to_str(num number, char* res, const num& buf_len) const
 	{
 		char* temp = res;
 		if (number == 0 && buf_len > 1)

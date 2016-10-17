@@ -6,24 +6,22 @@
 #include <sstream>
 #include "Chunk.h"
 #include "Entry.h"
+#include "InputNumberStream.h"
 
 class SimpleChunkCreator : public ChunkCreator
 {
 	//num chunk_byte_size = 8LL * 1024LL * 1024LL * 1024LL;
 	num chunk_byte_size = 1LL * 512LL * 1024LL * 1024LL;
 	//num chunk_byte_size = 50LL;
-	void ReadChunk(std::ifstream& input_file, num &line_number, Chunk& chunk) const
+	void ReadChunk(InputNumberStream& input_file, Chunk& chunk) const
 	{
-		std::string line = "";
-		while (!chunk.IsFull() && !getline(input_file, line).eof())
+		while (!chunk.IsFull())
 		{
-
-			num current_number;
-			std::stringstream ss(line);
-			ss >> current_number;
-
-			chunk.AddEntry(Entry(line_number, current_number));
-			line_number++;
+			Entry e = input_file.read_next();
+			if (e == Entry::empty)
+				break;
+		
+			chunk.AddEntry(e);
 		}
 	}
 
@@ -58,24 +56,24 @@ class SimpleChunkCreator : public ChunkCreator
 
 	void QuickSort(Chunk& chunk, num start, num end)
 	{
-		const num insert_size = 10;
+		const num insert_size = 20;
 		if ((end - start) < insert_size)
 		{
 			InsertSort(chunk, start, end);
 			return;
 		}
 
-		num pivot = chunk[0].GetVal();
+		num pivot = chunk[start].GetVal();
 		
 		num i = start;
 		num j = end - 1;
 
 		while (i < j)
 		{
-			while (chunk[i].GetVal() < pivot)
+			while (i < j && chunk[i].GetVal() <= pivot)
 				i++;
 
-			while (chunk[j].GetVal() > pivot)
+			while (i < j && chunk[j].GetVal() >= pivot)
 				j--;
 
 			auto temp = chunk[j];
@@ -83,22 +81,37 @@ class SimpleChunkCreator : public ChunkCreator
 			chunk[i] = temp;
 		}
 
-		QuickSort(chunk, start, (start + end)  / 2);
-		QuickSort(chunk, (start + end) / 2, end);
+		QuickSort(chunk, start, start + i);
+		QuickSort(chunk, start + i + 1, end);
 	}
 
 
 public:
-	bool Create(std::ifstream& input_file, num &line_number, const std::string &chunk_name) override
+	bool Create(InputNumberStream& input_file, const std::string &chunk_name) override
 	{
 		Chunk chunk(chunk_byte_size);
- 		ReadChunk(input_file, line_number, chunk);
+ 		ReadChunk(input_file, chunk);
 
 		if (chunk.Size() <= 0)
 			return false;
 
 		printf("Sorting chunk.\n");
-		QuickSort(chunk, 0, chunk.Size());
+		std::sort(chunk.begin(), chunk.end(), [](const Entry& e1,const Entry& e2)
+		{
+			return e1.GetVal() < e2.GetVal();
+		});
+		//QuickSort(chunk, 0, chunk.Size());
+
+		num prev = 0;
+		for (Entry e : chunk)
+		{
+			auto temp = e.GetVal();
+			if(temp < prev)
+			{
+				throw 0;
+			}
+			prev = temp;
+		}
 
 		printf("Saving chunk.\n");
 		SaveChunk(chunk, chunk_name);
