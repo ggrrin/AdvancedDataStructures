@@ -13,12 +13,12 @@ public:
 
 	static Entry empty;
 
-	num GetKey() const
+	const num& GetKey() const
 	{
 		return key;
 	}
 
-	num GetVal() const
+	const num& GetVal() const
 	{
 		return val;
 	}

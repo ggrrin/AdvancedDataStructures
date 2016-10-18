@@ -102,8 +102,28 @@ public:
 		});
 		//QuickSort(chunk, 0, chunk.Size());
 
+
+
+		Entry* r = nullptr;
+		for (Entry* w = chunk.begin(); r != chunk.end; r++)
+		{
+			if (w == nullptr)
+			{
+				w = r;
+				continue;
+			}
+
+			if (r->GetVal() != w->GetVal())
+				*++w = *r;
+			
+
+
+
+
+		}
+
 		num prev = 0;
-		for (Entry e : chunk)
+		for (const Entry& e : chunk)
 		{
 			auto temp = e.GetVal();
 			if(temp < prev)
