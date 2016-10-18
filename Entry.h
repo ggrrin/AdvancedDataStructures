@@ -3,6 +3,7 @@
 
 #include "Types.h"
 #include <string>
+#include <cmath>
 
 struct Entry
 {
