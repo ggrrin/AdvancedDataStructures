@@ -27,8 +27,14 @@ class SimpleChunkCreator : public ChunkCreator
 
 	void SaveChunk(const Chunk& chunk, const std::string& chunk_name) const
 	{
-		std::fstream output_file(chunk_name, std::ios_base::out);
+		std::fstream output_file(chunk_name, std::ios_base::out | std::ios_base::binary | std::ios_base::trunc);
+		if (!output_file.is_open())
+			throw 0;
+
 		output_file.write(reinterpret_cast<char*>(chunk.begin()), chunk.ByteSize());
+		if (!output_file.good())
+			throw 0;
+
 		output_file.close();
 	}
 
@@ -100,12 +106,13 @@ public:
 		{
 			return e1.GetVal() < e2.GetVal();
 		});
+
 		//QuickSort(chunk, 0, chunk.Size());
 
 
 
-		Entry* r = nullptr;
-		for (Entry* w = chunk.begin(); r != chunk.end; r++)
+		/*Entry* w = nullptr;
+		for (Entry* r = chunk.begin(); r != chunk.end(); r++)
 		{
 			if (w == nullptr)
 			{
@@ -114,24 +121,14 @@ public:
 			}
 
 			if (r->GetVal() != w->GetVal())
-				*++w = *r;
-			
+				w++;
 
 
-
-
+			if(w != r)
+				*w = *r;
 		}
 
-		num prev = 0;
-		for (const Entry& e : chunk)
-		{
-			auto temp = e.GetVal();
-			if(temp < prev)
-			{
-				throw 0;
-			}
-			prev = temp;
-		}
+		chunk.Shrink(++w - chunk.begin());*/
 
 		printf("Saving chunk.\n");
 		SaveChunk(chunk, chunk_name);

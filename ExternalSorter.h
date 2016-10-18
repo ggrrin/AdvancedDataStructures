@@ -12,6 +12,7 @@
 #include "Types.h"
 #include "Entry.h"
 #include "InputNumberStream.h"
+#include <errno.h> 
 
 
 class ExternalSorter
@@ -53,11 +54,18 @@ public:
 		{
 			if (!chunk_output)
 			{
-				std::ifstream chunk_decode("chunk_0_0");
-				std::ofstream output_decode(ch_out);
-				WriteRest(first, last_value, chunk_output, chunk_decode, output_decode);
-				chunk_decode.close();
-				output_decode.close();
+				std::ifstream chunk_decode("chunk_0_0", std::ios::in | std::ios::binary);
+				std::ofstream output_decode(ch_out, std::ios::out | std::ios::trunc);
+				if (chunk_decode.is_open() && output_decode.is_open())
+				{
+					WriteRest(first, last_value, chunk_output, chunk_decode, output_decode);
+					chunk_decode.close();
+					output_decode.close();
+				}
+				else
+				{
+					throw 0;
+				}
 				remove("chunk_0_0");
 			}
 			return;
@@ -72,9 +80,12 @@ public:
 		MergeSort(layer - 1, right_index, true);
 
 
-		std::ifstream chunk1(ch1_path);
-		std::ifstream chunk2(ch2_path);
-		std::ofstream output_chunk(ch_out);
+		std::ifstream chunk1(ch1_path, std::ios::in | std::ios::binary);
+		std::ifstream chunk2(ch2_path, std::ios::in | std::ios::binary);
+		std::ofstream output_chunk(ch_out, (chunk_output ? std::ios::binary : 0) | std::ios::out | std::ios::trunc);
+
+		if (!chunk1.is_open() || !chunk2.is_open() || !output_chunk.is_open())
+			throw 0;
 
 		printf("Merging on level %llu chunks %s : %s\n", layer, ch1_path.c_str(), ch2_path.c_str());
 
@@ -131,6 +142,12 @@ public:
 				auto len = e.get_string(str);
 				output_chunk.write(str, len);
 			}
+
+			if (!output_chunk.good())
+			{
+				printf(strerror(errno));
+				throw 0;
+			}
 		}
 
 		if (seek_chunk != nullptr)
@@ -142,10 +159,17 @@ public:
 
 	void WriteRest(bool& first, num& last_value, bool chunk_output, std::ifstream &chunk, std::ofstream &output_chunk)
 	{
-		while (chunk.is_open() && !chunk.eof())
+		while (!chunk.eof())
 		{
+
 			char buf[sizeof(Entry)];
 			chunk.read(buf, sizeof(Entry));
+			if (!chunk.good())
+			{
+				printf(strerror(errno));
+				throw 0;
+			}
+
 			Entry e = *reinterpret_cast<Entry*>(buf);
 			write_value(first, last_value, e, chunk_output, output_chunk, nullptr);
 		}

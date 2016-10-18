@@ -58,6 +58,14 @@ public:
 	{
 		return  *(begin() + index);
 	}
+
+	void Shrink(num size)
+	{
+		if (size < 0 || size > capacity)
+			throw 0;
+
+		this->size = size;
+	}
 };
 
 #endif
