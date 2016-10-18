@@ -80,9 +80,15 @@ public:
 		MergeSort(layer - 1, right_index, true);
 
 
+		
+		auto o_mode = std::ios::out | std::ios::trunc;
+		if (chunk_output)
+			o_mode |= std::ios_base::binary;
+
+
 		std::ifstream chunk1(ch1_path, std::ios::in | std::ios::binary);
 		std::ifstream chunk2(ch2_path, std::ios::in | std::ios::binary);
-		std::ofstream output_chunk(ch_out, (chunk_output ? std::ios::binary : 0) | std::ios::out | std::ios::trunc);
+		std::ofstream output_chunk(ch_out, o_mode );
 
 		if (!chunk1.is_open() || !chunk2.is_open() || !output_chunk.is_open())
 			throw 0;

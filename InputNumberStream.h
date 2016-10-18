@@ -48,8 +48,6 @@ class InputNumberStream
 
 	num parse_num(char* str) const
 	{
-		auto length = strlen(str);
-
 		bool overflow = false;
 
 		num res = 0;
