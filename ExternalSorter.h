@@ -167,20 +167,24 @@ public:
 	{
 		while (!chunk.eof())
 		{
-
 			char buf[sizeof(Entry)];
 			chunk.read(buf, sizeof(Entry));
 			Entry e = *reinterpret_cast<Entry*>(buf);
-			if (!chunk.good())
+			if (!chunk.eof() && !chunk.good())
 			{
-				char xxx[500];
-				e.get_string(xxx);
-				printf(xxx);
 				printf(strerror(errno));
 				throw 0;
 			}
 
-			write_value(first, last_value, e, chunk_output, output_chunk, nullptr);
+
+			if(chunk.good())
+				write_value(first, last_value, e, chunk_output, output_chunk, nullptr);
+			else
+			{
+				char xxx[200];
+				e.get_string(xxx);
+				printf(xxx);
+			}
 		}
 	}
 
