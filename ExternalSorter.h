@@ -43,31 +43,34 @@ public:
 		MergeSort(max_layer, 0, false);
 	}
 
+	void rewrite_chunk(Entry& last_entry, std::string& ch_out, bool chunk_output)
+	{
+		std::ifstream chunk_decode("chunk_0_0", std::ios::in | std::ios::binary);
+		std::ofstream output_decode(ch_out, std::ios::out | std::ios::binary | std::ios::trunc);
+		if (chunk_decode.is_open() && output_decode.is_open())
+		{
+			WriteRest(last_entry, chunk_output, chunk_decode, output_decode);
+			chunk_decode.close();
+			output_decode.close();
+		}
+		else
+		{
+			throw 0;
+		}
+		remove("chunk_0_0");
+	}
+
 	void MergeSort(num layer, num offset, bool chunk_output)
 	{
-		bool first = true;
-		num last_value = 0;
+		Entry last_entry;
 
 		std::string ch_out = !chunk_output ? "data.out" : "chunk_" + std::to_string(layer) + "_" + std::to_string(offset);
 
 		if (layer == 0)
 		{
 			if (!chunk_output)
-			{
-				std::ifstream chunk_decode("chunk_0_0", std::ios::in | std::ios::binary);
-				std::ofstream output_decode(ch_out, std::ios::out | std::ios::binary | std::ios::trunc);
-				if (chunk_decode.is_open() && output_decode.is_open())
-				{
-					WriteRest(first, last_value, chunk_output, chunk_decode, output_decode);
-					chunk_decode.close();
-					output_decode.close();
-				}
-				else
-				{
-					throw 0;
-				}
-				remove("chunk_0_0");
-			}
+				rewrite_chunk(last_entry, ch_out, chunk_output);
+
 			return;
 		}
 
@@ -80,7 +83,6 @@ public:
 		MergeSort(layer - 1, right_index, true);
 
 
-
 		auto o_mode = std::ios::out | std::ios::trunc;
 		if (chunk_output)
 			o_mode |= std::ios_base::binary;
@@ -88,10 +90,28 @@ public:
 
 		std::ifstream chunk1(ch1_path, std::ios::in | std::ios::binary);
 		std::ifstream chunk2(ch2_path, std::ios::in | std::ios::binary);
-		std::ofstream output_chunk(ch_out, o_mode);
 
-		if (!chunk1.is_open() || !chunk2.is_open() || !output_chunk.is_open())
+		if(chunk1.is_open() && !chunk2.is_open())
+		{
+			chunk1.close();
+			if (chunk_output)
+				rename(ch1_path.c_str(), ch_out.c_str());
+			else
+				rewrite_chunk(last_entry, ch_out, chunk_output);
+
+			return;
+		}
+		else if(!chunk1.is_open() && chunk2.is_open())
+		{
+			printf("This combination shouldnt be possible.");
 			throw 0;
+		}
+		else if(!chunk1.is_open() && !chunk2.is_open())
+		{
+			return;
+		}
+
+		std::ofstream output_chunk(ch_out, o_mode);
 
 		printf("Merging on level %llu chunks %s : %s\n", layer, ch1_path.c_str(), ch2_path.c_str());
 
@@ -116,15 +136,14 @@ public:
 			}
 
 			if (e1.GetVal() <= e2.GetVal())
-				write_value(first, last_value, e1, chunk_output, output_chunk, &chunk2);
+				write_value(last_entry, e1, chunk_output, output_chunk, &chunk2);
 			else
-				write_value(first, last_value, e2, chunk_output, output_chunk, &chunk1);
+				write_value(last_entry, e2, chunk_output, output_chunk, &chunk1);
 
-			first = false;
 		}
 
-		WriteRest(first, last_value, chunk_output, chunk1, output_chunk);
-		WriteRest(first, last_value, chunk_output, chunk2, output_chunk);
+		WriteRest(last_entry, chunk_output, chunk1, output_chunk);
+		WriteRest(last_entry, chunk_output, chunk2, output_chunk);
 
 		chunk1.close();
 		chunk2.close();
@@ -134,41 +153,63 @@ public:
 		std::remove(ch2_path.c_str());
 	}
 
-	void write_value(bool& first, num& last_value, Entry& e, bool chunk_output, std::ofstream& output_chunk, std::ifstream* seek_chunk)
-	{
-		if (first || true/*last_value != e.GetVal()*/)//TODO
-		{
-			if (chunk_output)
-			{
-				output_chunk.write(reinterpret_cast<char*>(&e), sizeof(Entry));
-			}
-			else
-			{
-				char str[255];
-				auto len = e.get_string(str);
-				output_chunk.write(str, len);
-				j++;
-			}
 
-			if (!output_chunk.good())
-			{
-				printf(strerror(errno));
-				throw 0;
-			}
+	num last_len = 0;
+	void write_entry(Entry& e, bool chunk_output, std::ofstream& output_chunk, bool seek_back = false)
+	{
+		if (chunk_output)
+		{
+			if(seek_back)
+				output_chunk.seekp(-static_cast<off_t>(sizeof(Entry)), std::ios_base::cur);
+
+			output_chunk.write(reinterpret_cast<char*>(&e), sizeof(Entry));
 		}
+		else
+		{
+			if(seek_back)
+				output_chunk.seekp(-last_len, std::ios_base::cur);
+
+			char str[255];
+			auto len = e.get_string(str);
+			output_chunk.write(str, len);
+			last_len = len;
+			j++;
+		}
+
+		if (!output_chunk.good())
+		{
+			printf(strerror(errno));
+			throw 0;
+		}
+	}
+
+
+	void write_value(Entry& last_entry, Entry& e, bool chunk_output, std::ofstream& output_chunk, std::ifstream* seek_chunk)
+	{
+		if (last_entry.IsEmpty() || last_entry.GetVal() != e.GetVal())//TODO
+		{
+			write_entry(e, chunk_output, output_chunk);
+		}
+		else if(last_entry.GetKey() > e.GetKey())
+		{
+			write_entry(e, chunk_output, output_chunk, true);
+		}
+
 
 		if (seek_chunk != nullptr)
 			seek_chunk->seekg(-static_cast<off_t>(sizeof(Entry)), std::ios_base::cur);
 
-		last_value = e.GetVal();
-		first = false;
+		last_entry = e;
 	}
-	
+
 	num i = 0;
 	num j = 0;
 
-	void WriteRest(bool& first, num& last_value, bool chunk_output, std::ifstream &chunk, std::ofstream &output_chunk)
+	void WriteRest(Entry& last_entry, bool chunk_output, std::ifstream &chunk, std::ofstream &output_chunk)
 	{
+		if (!chunk.is_open())
+			return;
+
 		char buf[sizeof(Entry)];
 		while (!chunk.eof())
 		{
@@ -182,17 +223,17 @@ public:
 
 			if (chunk.good())
 			{
-				write_value(first, last_value, e, chunk_output, output_chunk, nullptr);
+				write_value(last_entry, e, chunk_output, output_chunk, nullptr);
 				i++;
 			}
 			else
 			{
-				char xxx[200];//TODO
-				e.get_string(xxx);
-				printf(xxx);
+				//char xxx[200];//TODO
+				//e.get_string(xxx);
+				//printf(xxx);
 			}
 		}
-		printf("%llu    %llu\n", i, j);
+		//printf("%llu    %llu\n", i, j);
 	}
 
 	void Sort()

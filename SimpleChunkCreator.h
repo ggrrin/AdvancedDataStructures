@@ -7,22 +7,31 @@
 #include "Chunk.h"
 #include "Entry.h"
 #include "InputNumberStream.h"
+#include <tuple>
+#include <cmath>
 
 class SimpleChunkCreator : public ChunkCreator
 {
 	//num chunk_byte_size = 8LL * 1024LL * 1024LL * 1024LL;
-	num chunk_byte_size = 1LL * 512LL * 1024LL * 1024LL;
-	//num chunk_byte_size = 50LL;
-	void ReadChunk(InputNumberStream& input_file, Chunk& chunk) const
+	//num chunk_byte_size = 1LL * 512LL * 1024LL * 1024LL;
+	num chunk_byte_size = 40LL * 1024LL * 1024LL;
+	//num chunk_byte_size = 64LL;
+	std::tuple<num, num> ReadChunk(InputNumberStream& input_file, Chunk& chunk) const
 	{
+		num minv = 0xFFFFFFFFFFFFFFFF;
+		num maxv = 0;
+
 		while (!chunk.IsFull())
 		{
 			Entry e = input_file.read_next();
 			if (e == Entry::empty)
 				break;
-		
+
 			chunk.AddEntry(e);
+			minv = std::min(minv, e.GetVal());
+			maxv = std::max(maxv, e.GetVal());
 		}
+		return std::make_tuple(minv, maxv);
 	}
 
 	void SaveChunk(const Chunk& chunk, const std::string& chunk_name) const
@@ -62,64 +71,76 @@ class SimpleChunkCreator : public ChunkCreator
 
 	num chunk_size_log = 0;
 
-	void QuickSort(Chunk& chunk, num start, num end, num layer)
+	void QuickSort(Chunk& chunk, num start, num end, std::tuple<num, num> range, num layer)
 	{
 		const num insert_size = 20;
-		if ((end - start) < insert_size)
+		if (std::get<0>(range) == std::get<1>(range) || end - start == 0)
+		{
+			return;
+		}
+		else if ((end - start) < insert_size)
 		{
 			InsertSort(chunk, start, end);
 			return;
 		}
 
-		if (layer > 5 * chunk_size_log)
+		if (layer > 2 * chunk_size_log)
 		{
 			printf("Layer %llu excided in interval %llu %llu\n", layer, start, end);
 		}
 
-		num pivot = chunk[start].GetVal();
-		
+		num pivot = std::get<0>(range) / 2 + std::get<1>(range) / 2;//chunk[start].GetVal();
+		if (pivot < std::get<0>(range) || pivot > std::get<1>(range))
+			pivot = std::get<0>(range);
+
 		num i = start;
 		num j = end - 1;
 
+		auto range_l = std::make_tuple(std::get<1>(range), std::get<0>(range));
+		auto range_r = range_l;
+
+
 		while (i < j)
 		{
-			while (i < j && chunk[i].GetVal() <= pivot)
+			while (chunk[i].GetVal() <= pivot)
+			{
+				std::get<0>(range_l) = std::min(std::get<0>(range_l), chunk[i].GetVal());
+				std::get<1>(range_l) = std::max(std::get<1>(range_l), chunk[i].GetVal());
 				i++;
+			}
 
-			while (i < j && chunk[j].GetVal() >= pivot)
+			while (chunk[j].GetVal() > pivot)
+			{
+				std::get<0>(range_r) = std::min(std::get<0>(range_r), chunk[j].GetVal());
+				std::get<1>(range_r) = std::max(std::get<1>(range_r), chunk[j].GetVal());
 				j--;
+			}
 
-			auto temp = chunk[j];
-			chunk[j] = chunk[i];
-			chunk[i] = temp;
+			if (i < j)
+			{
+				auto temp = chunk[j];
+				chunk[j] = chunk[i];
+				chunk[i] = temp;
+
+
+				std::get<0>(range_l) = std::min(std::get<0>(range_l), chunk[i].GetVal());
+				std::get<1>(range_l) = std::max(std::get<1>(range_l), chunk[i].GetVal());
+				std::get<0>(range_r) = std::min(std::get<0>(range_r), chunk[j].GetVal());
+				std::get<1>(range_r) = std::max(std::get<1>(range_r), chunk[j].GetVal());
+			}
 		}
 
-		QuickSort(chunk, start, start + i, layer + 1);
-		QuickSort(chunk, start + i + 1, end, layer + 1);
+		/*if(chunk[i - 1].GetVal() > pivot || chunk[i].GetVal() <= pivot)
+		{
+			printf("here\n");
+		}*/
+		QuickSort(chunk, start, i, range_l, layer + 1);
+		QuickSort(chunk, i, end, range_r, layer + 1);
 	}
 
-
-public:
-	bool Create(InputNumberStream& input_file, const std::string &chunk_name) override
+	void Unique(Chunk& chunk)
 	{
-		Chunk chunk(chunk_byte_size);
- 		ReadChunk(input_file, chunk);
-
-		if (chunk.Size() <= 0)
-			return false;
-
-		printf("Sorting chunk.\n");
-	/*	std::sort(chunk.begin(), chunk.end(), [](const Entry& e1,const Entry& e2)
-		{
-			return e1.GetVal() < e2.GetVal();
-		});
-*/
-		chunk_size_log = log2l(chunk.Size());
-		QuickSort(chunk, 0, chunk.Size(), 0);
-
-
-
-		/*Entry* w = nullptr;
+		Entry* w = nullptr;
 		for (Entry* r = chunk.begin(); r != chunk.end(); r++)
 		{
 			if (w == nullptr)
@@ -128,15 +149,43 @@ public:
 				continue;
 			}
 
-			if (r->GetVal() != w->GetVal())
+			if (r->GetVal() < w->GetVal())//TODO
+			{
+				printf("Invalid order!");
+				throw 0;
+			}
+
+			bool not_same_as_previous = r->GetVal() != w->GetVal();
+			if (not_same_as_previous)
 				w++;
 
-
-			if(w != r)
-				*w = *r;
+			if (w != r)
+			{
+				if (not_same_as_previous || r->GetKey() < w->GetKey())
+					*w = *r;
+			}
 		}
 
-		chunk.Shrink(++w - chunk.begin());*/
+		chunk.Shrink(++w - chunk.begin());
+
+
+	}
+
+
+public:
+	bool Create(InputNumberStream& input_file, const std::string &chunk_name) override
+	{
+		Chunk chunk(chunk_byte_size);
+		std::tuple<num, num> range = ReadChunk(input_file, chunk);
+
+		if (chunk.Size() <= 0)
+			return false;
+
+		printf("Sorting chunk.\n");
+		chunk_size_log = log2l(chunk.Size());
+		QuickSort(chunk, 0, chunk.Size(), range, 0);
+
+		Unique(chunk);
 
 		printf("Saving chunk.\n");
 		SaveChunk(chunk, chunk_name);
