@@ -55,7 +55,7 @@ public:
 			if (!chunk_output)
 			{
 				std::ifstream chunk_decode("chunk_0_0", std::ios::in | std::ios::binary);
-				std::ofstream output_decode(ch_out, std::ios::out | std::ios::trunc);
+				std::ofstream output_decode(ch_out, std::ios::out | std::ios::binary | std::ios::trunc);
 				if (chunk_decode.is_open() && output_decode.is_open())
 				{
 					WriteRest(first, last_value, chunk_output, chunk_decode, output_decode);
@@ -80,7 +80,7 @@ public:
 		MergeSort(layer - 1, right_index, true);
 
 
-		
+
 		auto o_mode = std::ios::out | std::ios::trunc;
 		if (chunk_output)
 			o_mode |= std::ios_base::binary;
@@ -88,7 +88,7 @@ public:
 
 		std::ifstream chunk1(ch1_path, std::ios::in | std::ios::binary);
 		std::ifstream chunk2(ch2_path, std::ios::in | std::ios::binary);
-		std::ofstream output_chunk(ch_out, o_mode );
+		std::ofstream output_chunk(ch_out, o_mode);
 
 		if (!chunk1.is_open() || !chunk2.is_open() || !output_chunk.is_open())
 			throw 0;
@@ -136,7 +136,7 @@ public:
 
 	void write_value(bool& first, num& last_value, Entry& e, bool chunk_output, std::ofstream& output_chunk, std::ifstream* seek_chunk)
 	{
-		if (first || last_value != e.GetVal())
+		if (first || true/*last_value != e.GetVal()*/)//TODO
 		{
 			if (chunk_output)
 			{
@@ -147,6 +147,7 @@ public:
 				char str[255];
 				auto len = e.get_string(str);
 				output_chunk.write(str, len);
+				j++;
 			}
 
 			if (!output_chunk.good())
@@ -162,12 +163,15 @@ public:
 		last_value = e.GetVal();
 		first = false;
 	}
+	
+	num i = 0;
+	num j = 0;
 
 	void WriteRest(bool& first, num& last_value, bool chunk_output, std::ifstream &chunk, std::ofstream &output_chunk)
 	{
+		char buf[sizeof(Entry)];
 		while (!chunk.eof())
 		{
-			char buf[sizeof(Entry)];
 			chunk.read(buf, sizeof(Entry));
 			Entry e = *reinterpret_cast<Entry*>(buf);
 			if (!chunk.eof() && !chunk.good())
@@ -176,16 +180,19 @@ public:
 				throw 0;
 			}
 
-
-			if(chunk.good())
+			if (chunk.good())
+			{
 				write_value(first, last_value, e, chunk_output, output_chunk, nullptr);
+				i++;
+			}
 			else
 			{
-				char xxx[200];
+				char xxx[200];//TODO
 				e.get_string(xxx);
 				printf(xxx);
 			}
 		}
+		printf("%llu    %llu\n", i, j);
 	}
 
 	void Sort()

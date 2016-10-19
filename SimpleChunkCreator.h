@@ -60,13 +60,20 @@ class SimpleChunkCreator : public ChunkCreator
 		}
 	}
 
-	void QuickSort(Chunk& chunk, num start, num end)
+	num chunk_size_log = 0;
+
+	void QuickSort(Chunk& chunk, num start, num end, num layer)
 	{
 		const num insert_size = 20;
 		if ((end - start) < insert_size)
 		{
 			InsertSort(chunk, start, end);
 			return;
+		}
+
+		if (layer > 5 * chunk_size_log)
+		{
+			printf("Layer %llu excided in interval %llu %llu\n", layer, start, end);
 		}
 
 		num pivot = chunk[start].GetVal();
@@ -87,8 +94,8 @@ class SimpleChunkCreator : public ChunkCreator
 			chunk[i] = temp;
 		}
 
-		QuickSort(chunk, start, start + i);
-		QuickSort(chunk, start + i + 1, end);
+		QuickSort(chunk, start, start + i, layer + 1);
+		QuickSort(chunk, start + i + 1, end, layer + 1);
 	}
 
 
@@ -102,12 +109,13 @@ public:
 			return false;
 
 		printf("Sorting chunk.\n");
-		std::sort(chunk.begin(), chunk.end(), [](const Entry& e1,const Entry& e2)
+	/*	std::sort(chunk.begin(), chunk.end(), [](const Entry& e1,const Entry& e2)
 		{
 			return e1.GetVal() < e2.GetVal();
 		});
-
-		//QuickSort(chunk, 0, chunk.Size());
+*/
+		chunk_size_log = log2l(chunk.Size());
+		QuickSort(chunk, 0, chunk.Size(), 0);
 
 
 
