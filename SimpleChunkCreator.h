@@ -2,88 +2,12 @@
 #define simple_chunk_creator_
 
 #include "ChunkCreator.h"
-#include <string>
-#include <sstream>
 #include "Chunk.h"
 #include "Entry.h"
 #include "InputNumberStream.h"
-#include <tuple>
-#include <cmath>
 #include "QuickSort.h"
 #include "LogHelp.h"
-
-class SubChunk
-{
-	Entry* begin_;
-	Entry* end_;
-
-public:
-	SubChunk() : begin_(nullptr), end_(nullptr) {}
-
-	SubChunk(Entry* begin, Entry* end) : begin_(begin), end_(end) {}
-
-	void sort()
-	{
-		auto ts = std::chrono::steady_clock::now();
-
-		quick_sort(begin_, end_);
-
-		auto te_sort = std::chrono::steady_clock::now();
-
-
-		end_ = begin_ + Unique(begin_, end_);
-
-		auto te_unique = std::chrono::steady_clock::now();
-		logt("Subchunk sorted in ", ts, te_sort);
-		logt("Subchunk uniqued in ", te_sort, te_unique);
-	}
-
-	num size() const
-	{
-		return end_ - begin_;
-	}
-
-	Entry* begin() const
-	{
-		return begin_;
-	}
-
-	Entry* end() const
-	{
-		return end_;
-	}
-
-	num Unique(Entry* begin, Entry* end)
-	{
-		Entry* w = nullptr;
-		for (Entry* r = begin; r != end; r++)
-		{
-			if (w == nullptr)
-			{
-				w = r;
-				continue;
-			}
-
-			if (r->GetVal() < w->GetVal())//TODO
-			{
-				printf("Invalid order!");
-				throw 0;
-			}
-
-			bool not_same_as_previous = r->GetVal() != w->GetVal();
-			if (not_same_as_previous)
-				w++;
-
-			if (w != r)
-			{
-				if (not_same_as_previous || r->GetKey() < w->GetKey())
-					*w = *r;
-			}
-		}
-		return ++w - begin;//new size
-	}
-
-};
+#include "SubChunk.h"
 
 class SimpleChunkCreator : public ChunkCreator
 {
@@ -154,47 +78,50 @@ public:
 
 			Entry* sch1_it = sch1.begin();
 			Entry* sch2_it = sch2.begin();
-
 			Entry* sch_o_begin = ch_it;
 
-			while (sch1_it != sch1.end() && sch2_it != sch2.end())
+			if (i + 1 != chunks_count)
 			{
-				if (sch1_it->GetVal() < sch2_it->GetVal())
+				while (sch1_it != sch1.end() && sch2_it != sch2.end())
 				{
-					set_value(write, ch_it, sch1_it);
-
-				}
-				else if (sch1_it->GetVal() > sch2_it->GetVal())
-				{
-					set_value(write, ch_it, sch2_it);
-				}
-				else
-				{
-					Entry*& used_it = sch1_it;
-					if (sch1_it->GetKey() < sch2_it->GetKey())
+					if (sch1_it->GetVal() < sch2_it->GetVal())
 					{
-						used_it = sch1_it;
-						sch2_it++;
+						set_value(write, ch_it, sch1_it);
+
+					}
+					else if (sch1_it->GetVal() > sch2_it->GetVal())
+					{
+						set_value(write, ch_it, sch2_it);
 					}
 					else
 					{
-						used_it = sch2_it;
-						sch1_it++;
+						Entry*& used_it = sch1_it;
+						if (sch1_it->GetKey() < sch2_it->GetKey())
+						{
+							used_it = sch1_it;
+							sch2_it++;
+						}
+						else
+						{
+							used_it = sch2_it;
+							sch1_it++;
+						}
+						set_value(write, ch_it, used_it);
 					}
-					set_value(write, ch_it, used_it);
 				}
+
+
+				while (sch2_it != sch2.end())
+					set_value(write, ch_it, sch2_it);
 			}
 
 			while (sch1_it != sch1.end())
 				set_value(write, ch_it, sch1_it);
 
-			while (sch2_it != sch2.end())
-				set_value(write, ch_it, sch2_it);
-
 			next_subchunks[i / 2] = SubChunk(sch_o_begin, ch_it);
 		}
 
-		
+
 		auto& res = MergeSort(write, read, next_subchunks, next_subchunks_count);
 		delete[] next_subchunks;
 		return res;
@@ -211,9 +138,7 @@ public:
 		if (size <= 0)
 			return chunk;
 
-		num sub_chunk_count = size / subchunk_size;
-		if (subchunk_size * sub_chunk_count != size)
-			throw 0;
+		num sub_chunk_count = size / subchunk_size + ((size % subchunk_size) != 0 ? 1 : 0);
 
 		SubChunk* subchunks = new SubChunk[sub_chunk_count];
 
@@ -228,7 +153,7 @@ public:
 
 
 		auto ts = std::chrono::steady_clock::now();
-		auto& res = MergeSort(chunk, buffer, subchunks, sub_chunk_count );
+		auto& res = MergeSort(chunk, buffer, subchunks, sub_chunk_count);
 		auto te = std::chrono::steady_clock::now();
 		logt("Merging phase ", ts, te);
 		delete[] subchunks;

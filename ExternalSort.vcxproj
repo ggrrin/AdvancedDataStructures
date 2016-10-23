@@ -152,6 +152,7 @@
     <ClInclude Include="LogHelp.h" />
     <ClInclude Include="QuickSort.h" />
     <ClInclude Include="SimpleChunkCreator.h" />
+    <ClInclude Include="SubChunk.h" />
     <ClInclude Include="Types.h" />
   </ItemGroup>
   <ItemGroup>
