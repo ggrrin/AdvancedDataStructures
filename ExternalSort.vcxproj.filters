@@ -36,6 +36,18 @@
     <ClInclude Include="InputNumberStream.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="InnerSortTest.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Heapsort.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="QuickSort.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="LogHelp.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">

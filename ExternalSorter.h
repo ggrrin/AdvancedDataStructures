@@ -19,6 +19,7 @@ class ExternalSorter
 {
 	std::string filename;
 	std::unique_ptr<ChunkCreator> chunkCreator;
+	const num chunk_byte_size = 4llu * 1024llu * 1024llu * 1024llu;
 
 public:
 	ExternalSorter(const std::string& filename_p, std::unique_ptr<ChunkCreator> chunkCreator_p)
@@ -30,17 +31,10 @@ public:
 		while (!input_file.eof())
 		{
 			printf("Creating chunk %llu\n", chunk_index);
-			chunkCreator->Create(input_file, "chunk_0_" + std::to_string(chunk_index));
+			chunkCreator->Create(input_file, "chunk_0_" + std::to_string(chunk_index), chunk_byte_size);
 			chunk_index++;
 		}
 		return chunk_index;
-	}
-
-	void ExternalMergeSort(num chunks_count)
-	{
-		num max_layer = static_cast<num>(ceil(log2(static_cast<long double>(chunks_count))));
-
-		MergeSort(max_layer, 0, false);
 	}
 
 	void rewrite_chunk(Entry& last_entry, std::string& ch_out, bool chunk_output)
@@ -58,6 +52,13 @@ public:
 			throw 0;
 		}
 		remove("chunk_0_0");
+	}
+
+	void ExternalMergeSort(num chunks_count)
+	{
+		num max_layer = static_cast<num>(ceil(log2(static_cast<long double>(chunks_count))));
+
+		MergeSort(max_layer, 0, false);
 	}
 
 	void MergeSort(num layer, num offset, bool chunk_output)
@@ -91,7 +92,7 @@ public:
 		std::ifstream chunk1(ch1_path, std::ios::in | std::ios::binary);
 		std::ifstream chunk2(ch2_path, std::ios::in | std::ios::binary);
 
-		if(chunk1.is_open() && !chunk2.is_open())
+		if (chunk1.is_open() && !chunk2.is_open())
 		{
 			chunk1.close();
 			if (chunk_output)
@@ -101,12 +102,12 @@ public:
 
 			return;
 		}
-		else if(!chunk1.is_open() && chunk2.is_open())
+		else if (!chunk1.is_open() && chunk2.is_open())
 		{
 			printf("This combination shouldnt be possible.");
 			throw 0;
 		}
-		else if(!chunk1.is_open() && !chunk2.is_open())
+		else if (!chunk1.is_open() && !chunk2.is_open())
 		{
 			return;
 		}
@@ -159,14 +160,14 @@ public:
 	{
 		if (chunk_output)
 		{
-			if(seek_back)
+			if (seek_back)
 				output_chunk.seekp(-static_cast<off_t>(sizeof(Entry)), std::ios_base::cur);
 
 			output_chunk.write(reinterpret_cast<char*>(&e), sizeof(Entry));
 		}
 		else
 		{
-			if(seek_back)
+			if (seek_back)
 				output_chunk.seekp(-last_len, std::ios_base::cur);
 
 			char str[255];
@@ -190,7 +191,7 @@ public:
 		{
 			write_entry(e, chunk_output, output_chunk);
 		}
-		else if(last_entry.GetKey() > e.GetKey())
+		else if (last_entry.GetKey() > e.GetKey())
 		{
 			write_entry(e, chunk_output, output_chunk, true);
 		}

@@ -146,7 +146,11 @@
     <ClInclude Include="ChunkCreator.h" />
     <ClInclude Include="Entry.h" />
     <ClInclude Include="ExternalSorter.h" />
+    <ClInclude Include="Heapsort.h" />
+    <ClInclude Include="InnerSortTest.h" />
     <ClInclude Include="InputNumberStream.h" />
+    <ClInclude Include="LogHelp.h" />
+    <ClInclude Include="QuickSort.h" />
     <ClInclude Include="SimpleChunkCreator.h" />
     <ClInclude Include="Types.h" />
   </ItemGroup>

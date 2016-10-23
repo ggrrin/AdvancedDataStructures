@@ -11,7 +11,7 @@ class ChunkCreator
 public:
 	virtual ~ChunkCreator() {}
 
-	virtual bool Create(InputNumberStream& input_file, const std::string &chunk_name) = 0;
+	virtual bool Create(InputNumberStream& input_file, const std::string &chunk_name, num chunk_byte_size) = 0;
 };
 
 #endif

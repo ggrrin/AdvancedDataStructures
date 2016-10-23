@@ -9,139 +9,54 @@
 #include "InputNumberStream.h"
 #include <tuple>
 #include <cmath>
+#include "QuickSort.h"
+#include "LogHelp.h"
 
-class SimpleChunkCreator : public ChunkCreator
+class SubChunk
 {
-	//num chunk_byte_size = 8LL * 1024LL * 1024LL * 1024LL;
-	//num chunk_byte_size = 1LL * 512LL * 1024LL * 1024LL;
-	num chunk_byte_size = 40LL * 1024LL * 1024LL;
-	//num chunk_byte_size = 64LL;
-	std::tuple<num, num> ReadChunk(InputNumberStream& input_file, Chunk& chunk) const
+	Entry* begin_;
+	Entry* end_;
+
+public:
+	SubChunk() : begin_(nullptr), end_(nullptr) {}
+
+	SubChunk(Entry* begin, Entry* end) : begin_(begin), end_(end) {}
+
+	void sort()
 	{
-		num minv = 0xFFFFFFFFFFFFFFFF;
-		num maxv = 0;
+		auto ts = std::chrono::steady_clock::now();
 
-		while (!chunk.IsFull())
-		{
-			Entry e = input_file.read_next();
-			if (e == Entry::empty)
-				break;
+		quick_sort(begin_, end_);
 
-			chunk.AddEntry(e);
-			minv = std::min(minv, e.GetVal());
-			maxv = std::max(maxv, e.GetVal());
-		}
-		return std::make_tuple(minv, maxv);
+		auto te_sort = std::chrono::steady_clock::now();
+
+
+		end_ = begin_ + Unique(begin_, end_);
+
+		auto te_unique = std::chrono::steady_clock::now();
+		logt("Subchunk sorted in ", ts, te_sort);
+		logt("Subchunk uniqued in ", te_sort, te_unique);
 	}
 
-	void SaveChunk(const Chunk& chunk, const std::string& chunk_name) const
+	num size() const
 	{
-		std::fstream output_file(chunk_name, std::ios_base::out | std::ios_base::binary | std::ios_base::trunc);
-		if (!output_file.is_open())
-			throw 0;
-
-		output_file.write(reinterpret_cast<char*>(chunk.begin()), chunk.ByteSize());
-		if (!output_file.good())
-			throw 0;
-
-		output_file.close();
+		return end_ - begin_;
 	}
 
-
-	void InsertSort(Chunk& chunk, num start, num end)
+	Entry* begin() const
 	{
-		for (size_t i = start; i < end; i++)
-		{
-			num min = chunk[i].GetVal();
-			num min_index = i;
-			for (size_t st_m = i + 1; st_m < end; st_m++)
-			{
-				if (min > chunk[st_m].GetVal())
-				{
-					min = chunk[st_m].GetVal();
-					min_index = st_m;
-				}
-			}
-
-			auto temp = chunk[min_index];
-			chunk[min_index] = chunk[i];
-			chunk[i] = temp;
-		}
+		return begin_;
 	}
 
-	num chunk_size_log = 0;
-
-	void QuickSort(Chunk& chunk, num start, num end, std::tuple<num, num> range, num layer)
+	Entry* end() const
 	{
-		const num insert_size = 20;
-		if (std::get<0>(range) == std::get<1>(range) || end - start == 0)
-		{
-			return;
-		}
-		else if ((end - start) < insert_size)
-		{
-			InsertSort(chunk, start, end);
-			return;
-		}
-
-		if (layer > 2 * chunk_size_log)
-		{
-			printf("Layer %llu excided in interval %llu %llu\n", layer, start, end);
-		}
-
-		num pivot = std::get<0>(range) / 2 + std::get<1>(range) / 2;//chunk[start].GetVal();
-		if (pivot < std::get<0>(range) || pivot > std::get<1>(range))
-			pivot = std::get<0>(range);
-
-		num i = start;
-		num j = end - 1;
-
-		auto range_l = std::make_tuple(std::get<1>(range), std::get<0>(range));
-		auto range_r = range_l;
-
-
-		while (i < j)
-		{
-			while (chunk[i].GetVal() <= pivot)
-			{
-				std::get<0>(range_l) = std::min(std::get<0>(range_l), chunk[i].GetVal());
-				std::get<1>(range_l) = std::max(std::get<1>(range_l), chunk[i].GetVal());
-				i++;
-			}
-
-			while (chunk[j].GetVal() > pivot)
-			{
-				std::get<0>(range_r) = std::min(std::get<0>(range_r), chunk[j].GetVal());
-				std::get<1>(range_r) = std::max(std::get<1>(range_r), chunk[j].GetVal());
-				j--;
-			}
-
-			if (i < j)
-			{
-				auto temp = chunk[j];
-				chunk[j] = chunk[i];
-				chunk[i] = temp;
-
-
-				std::get<0>(range_l) = std::min(std::get<0>(range_l), chunk[i].GetVal());
-				std::get<1>(range_l) = std::max(std::get<1>(range_l), chunk[i].GetVal());
-				std::get<0>(range_r) = std::min(std::get<0>(range_r), chunk[j].GetVal());
-				std::get<1>(range_r) = std::max(std::get<1>(range_r), chunk[j].GetVal());
-			}
-		}
-
-		/*if(chunk[i - 1].GetVal() > pivot || chunk[i].GetVal() <= pivot)
-		{
-			printf("here\n");
-		}*/
-		QuickSort(chunk, start, i, range_l, layer + 1);
-		QuickSort(chunk, i, end, range_r, layer + 1);
+		return end_;
 	}
 
-	void Unique(Chunk& chunk)
+	num Unique(Entry* begin, Entry* end)
 	{
 		Entry* w = nullptr;
-		for (Entry* r = chunk.begin(); r != chunk.end(); r++)
+		for (Entry* r = begin; r != end; r++)
 		{
 			if (w == nullptr)
 			{
@@ -165,30 +80,191 @@ class SimpleChunkCreator : public ChunkCreator
 					*w = *r;
 			}
 		}
+		return ++w - begin;//new size
+	}
 
-		chunk.Shrink(++w - chunk.begin());
+};
 
+class SimpleChunkCreator : public ChunkCreator
+{
+public:
 
+	void ReadChunk(InputNumberStream& input_file, Chunk& chunk) const
+	{
+		while (!chunk.IsFull())
+		{
+			Entry e = input_file.read_next();
+			if (e == Entry::empty)
+				break;
+
+			chunk.AddEntry(e);
+		}
+	}
+
+	void SaveChunk(const Chunk& chunk, const std::string& chunk_name) const
+	{
+		std::fstream output_file(chunk_name, std::ios_base::out | std::ios_base::binary | std::ios_base::trunc);
+		if (!output_file.is_open())
+			throw 0;
+
+		output_file.write(reinterpret_cast<char*>(chunk.begin()), chunk.ByteSize());
+		if (!output_file.good())
+			throw 0;
+
+		output_file.close();
+	}
+
+	void set_value(Chunk& ch, Entry*& ch_it, Entry*&sch_it) const
+	{
+		if (ch_it == ch.begin())
+			*ch_it++ = *sch_it;
+		else
+		{
+			auto prev = ch_it - 1;
+			if (prev->GetVal() == sch_it->GetVal())
+			{
+				if (prev->GetKey() > sch_it->GetKey())
+				{
+					*ch_it++ = *sch_it;
+				}
+			}
+			else
+				*ch_it++ = *sch_it;
+
+		}
+		sch_it++;
+	}
+
+	Chunk& MergeSort(Chunk& read, Chunk& write, SubChunk* subchunks, num chunks_count) const
+	{
+		if (chunks_count == 1)
+		{
+			read.Shrink(subchunks[chunks_count - 1].end() - read.begin());
+			return read;
+		}
+
+		num next_subchunks_count = chunks_count / 2 + (chunks_count % 2);
+		SubChunk* next_subchunks = new SubChunk[next_subchunks_count];
+
+		Entry* ch_it = write.begin();
+		for (num i = 0; i < chunks_count; i += 2)
+		{
+			SubChunk& sch1 = subchunks[i];
+			SubChunk& sch2 = subchunks[i + 1];
+
+			Entry* sch1_it = sch1.begin();
+			Entry* sch2_it = sch2.begin();
+
+			Entry* sch_o_begin = ch_it;
+
+			while (sch1_it != sch1.end() && sch2_it != sch2.end())
+			{
+				if (sch1_it->GetVal() < sch2_it->GetVal())
+				{
+					set_value(write, ch_it, sch1_it);
+
+				}
+				else if (sch1_it->GetVal() > sch2_it->GetVal())
+				{
+					set_value(write, ch_it, sch2_it);
+				}
+				else
+				{
+					Entry*& used_it = sch1_it;
+					if (sch1_it->GetKey() < sch2_it->GetKey())
+					{
+						used_it = sch1_it;
+						sch2_it++;
+					}
+					else
+					{
+						used_it = sch2_it;
+						sch1_it++;
+					}
+					set_value(write, ch_it, used_it);
+				}
+			}
+
+			while (sch1_it != sch1.end())
+				set_value(write, ch_it, sch1_it);
+
+			while (sch2_it != sch2.end())
+				set_value(write, ch_it, sch2_it);
+
+			next_subchunks[i / 2] = SubChunk(sch_o_begin, ch_it);
+		}
+
+		
+		auto& res = MergeSort(write, read, next_subchunks, next_subchunks_count);
+		delete[] next_subchunks;
+		return res;
 	}
 
 
-public:
-	bool Create(InputNumberStream& input_file, const std::string &chunk_name) override
+	Chunk& Sort(Chunk& chunk, Chunk& buffer) const
 	{
-		Chunk chunk(chunk_byte_size);
-		std::tuple<num, num> range = ReadChunk(input_file, chunk);
+		Entry* begin = chunk.begin();
+		Entry* end = chunk.end();
+		const num subchunk_byte_size = 1024llu * 1024llu * 1024llu / 2llu;//512 MB
+		const num subchunk_size = subchunk_byte_size / sizeof(Entry);
+		num size = end - begin;
+		if (size <= 0)
+			return chunk;
 
+		num sub_chunk_count = size / subchunk_size;
+		if (subchunk_size * sub_chunk_count != size)
+			throw 0;
+
+		SubChunk* subchunks = new SubChunk[sub_chunk_count];
+
+		num sum_size = 0;
+		Entry* beg_i = begin;
+		for (num i = 0; i < sub_chunk_count; ++i, beg_i += subchunk_size)
+		{
+			subchunks[i] = SubChunk(beg_i, std::min(beg_i + subchunk_size, end));
+			subchunks[i].sort();
+			sum_size += subchunks[i].size();
+		}
+
+
+		auto ts = std::chrono::steady_clock::now();
+		auto& res = MergeSort(chunk, buffer, subchunks, sub_chunk_count );
+		auto te = std::chrono::steady_clock::now();
+		logt("Merging phase ", ts, te);
+		delete[] subchunks;
+		return res;
+	}
+
+
+	bool Create(InputNumberStream& input_file, const std::string &chunk_name, num chunk_byte_size) override
+	{
+		printf("Creating chunk.\n");
+		Chunk chunk(chunk_byte_size);
+		Chunk buffer(chunk_byte_size);
+
+		printf("Reading chunk.\n");
+		auto ts = std::chrono::steady_clock::now();
+
+		ReadChunk(input_file, chunk);
 		if (chunk.Size() <= 0)
 			return false;
 
-		printf("Sorting chunk.\n");
-		chunk_size_log = log2l(chunk.Size());
-		QuickSort(chunk, 0, chunk.Size(), range, 0);
+		auto te_read = std::chrono::steady_clock::now();
 
-		Unique(chunk);
+		printf("Sorting chunk.\n");
+
+		auto& res = Sort(chunk, buffer);
+
+		auto te_sort = std::chrono::steady_clock::now();
 
 		printf("Saving chunk.\n");
-		SaveChunk(chunk, chunk_name);
+		SaveChunk(res, chunk_name);
+
+		auto te_save = std::chrono::steady_clock::now();
+
+		logt("Reading chunk in", ts, te_read);
+		logt("Sorting chunk in", te_read, te_sort);
+		logt("Saving chunk in", te_sort, te_save);
 		return true;
 	}
 };
