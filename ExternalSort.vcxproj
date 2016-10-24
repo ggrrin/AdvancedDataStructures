@@ -150,6 +150,7 @@
     <ClInclude Include="InnerSortTest.h" />
     <ClInclude Include="InputNumberStream.h" />
     <ClInclude Include="LogHelp.h" />
+    <ClInclude Include="OutputStream.h" />
     <ClInclude Include="QuickSort.h" />
     <ClInclude Include="SimpleChunkCreator.h" />
     <ClInclude Include="SubChunk.h" />

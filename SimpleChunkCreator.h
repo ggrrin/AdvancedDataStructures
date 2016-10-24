@@ -38,10 +38,13 @@ public:
 		output_file.close();
 	}
 
-	void set_value(Chunk& ch, Entry*& ch_it, Entry*&sch_it) const
+	void set_value(bool& first, Entry*& ch_it, Entry*&sch_it) const
 	{
-		if (ch_it == ch.begin())
+		if(first)
+		{
 			*ch_it++ = *sch_it;
+			first = false;
+		}
 		else
 		{
 			auto prev = ch_it - 1;
@@ -49,7 +52,7 @@ public:
 			{
 				if (prev->GetKey() > sch_it->GetKey())
 				{
-					*ch_it++ = *sch_it;
+					*--ch_it = *sch_it;
 				}
 			}
 			else
@@ -79,6 +82,7 @@ public:
 			Entry* sch1_it = sch1.begin();
 			Entry* sch2_it = sch2.begin();
 			Entry* sch_o_begin = ch_it;
+			bool first = true;
 
 			if (i + 1 != chunks_count)
 			{
@@ -86,12 +90,12 @@ public:
 				{
 					if (sch1_it->GetVal() < sch2_it->GetVal())
 					{
-						set_value(write, ch_it, sch1_it);
+						set_value(first, ch_it, sch1_it);
 
 					}
 					else if (sch1_it->GetVal() > sch2_it->GetVal())
 					{
-						set_value(write, ch_it, sch2_it);
+						set_value(first, ch_it, sch2_it);
 					}
 					else
 					{
@@ -106,17 +110,17 @@ public:
 							used_it = sch2_it;
 							sch1_it++;
 						}
-						set_value(write, ch_it, used_it);
+						set_value(first, ch_it, used_it);
 					}
 				}
 
 
 				while (sch2_it != sch2.end())
-					set_value(write, ch_it, sch2_it);
+					set_value(first, ch_it, sch2_it);
 			}
 
 			while (sch1_it != sch1.end())
-				set_value(write, ch_it, sch1_it);
+				set_value(first, ch_it, sch1_it);
 
 			next_subchunks[i / 2] = SubChunk(sch_o_begin, ch_it);
 		}
