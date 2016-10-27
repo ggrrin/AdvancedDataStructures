@@ -11,4 +11,10 @@ inline void logt(char* msg, std::chrono::time_point<std::chrono::steady_clock> t
 	printf("%s %lld ms\n", msg, diff.count());
 }
 
+inline void terminatexx(char* message)
+{
+	printf("%s\n", message);
+	throw std::exception("%s");
+}
+
 #endif

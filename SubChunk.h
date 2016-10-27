@@ -58,10 +58,7 @@ public:
 			}
 
 			if (r->GetVal() < w->GetVal())//TODO
-			{
-				printf("Invalid order!");
-				throw 0;
-			}
+				terminatexx("Invalid order!");
 
 			bool not_same_as_previous = r->GetVal() != w->GetVal();
 			if (not_same_as_previous)

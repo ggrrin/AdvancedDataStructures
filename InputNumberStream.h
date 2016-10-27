@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include "Entry.h"
 #include <string.h>
+#include "LogHelp.h"
 
 class InputNumberStream
 {
@@ -56,7 +57,7 @@ class InputNumberStream
 		{
 			if (*input < '0' || *input > '9')
 			{
-				throw 0;
+				terminatexx("invalid character");
 			}
 
 			num prev = res;

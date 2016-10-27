@@ -28,21 +28,22 @@ class InStream
 		}
 	}
 public:
-	InStream(const char* path, num size) :
+	InStream(const char* path, num available_memory, char* memory) :
 		file(fopen(path, "rb")),
-		buffer_size(size / 2),
-		buffer1(new Entry[buffer_size]),
-		buffer2(new Entry[buffer_size]),
+		buffer_size(available_memory / sizeof(Entry) / 2),
+		buffer1(reinterpret_cast<Entry*>(memory)),
+		buffer2(reinterpret_cast<Entry*>(memory) + buffer_size),
 		current_buffer(buffer1),
 		position(0),
 		closed(false),
-		end(-1),
+		end(0xFFFFFFFFFFFFFFFF),//TODO
 		first(true)
 	{
 		if (file == nullptr)
-			throw 0;
+			terminatexx("File not opened");
 		fill_buffer();
 	};
+
 	~InStream()
 	{
 		if (!closed)
@@ -57,15 +58,15 @@ public:
 	void close()
 	{
 		fclose(file);
-		delete[] buffer1;
-		delete[] buffer2;
+		//delete[] buffer1;
+		//delete[] buffer2;
 		closed = true;
 	}
 
 	const Entry& peak()
 	{
 		if (eof())
-			throw 0;
+			terminatexx("End of file.");
 
 		if (position >= buffer_size)
 		{
@@ -106,11 +107,11 @@ class OutputStream
 	}
 
 public:
-	OutputStream(const char* path, num size) :
+	OutputStream(const char* path, num available_memory, char* memory) :
 		file(fopen(path, "wb")),
-		buffer_size(size / 2),
-		buffer1(new Entry[buffer_size]),
-		buffer2(new Entry[buffer_size]),
+		buffer_size(available_memory / sizeof(Entry) / 2),
+		buffer1(reinterpret_cast<Entry*>(memory)),
+		buffer2(reinterpret_cast<Entry*>(memory) + buffer_size),
 		current_buffer(buffer1),
 		position(0),
 		closed(false),
@@ -118,7 +119,7 @@ public:
 		first(true)
 	{
 		if (file == nullptr)
-			throw 0;
+			terminatexx("File not open");
 	};
 
 	~OutputStream()
@@ -131,15 +132,15 @@ public:
 	{
 		write_buffer(position);
 		fclose(file);
-		delete[] buffer1;
-		delete[] buffer2;
+		//delete[] buffer1;
+		//delete[] buffer2;
 		closed = true;
 	}
 
 	const Entry& read_prev()
 	{
 		if (first)
-			throw 0;
+			terminatexx("File not open.");
 
 		if (position == 0)
 			return (current_buffer == buffer1 ? buffer2 : buffer1)[buffer_size - 1];
@@ -150,7 +151,7 @@ public:
 	void rewrite(const Entry& e)
 	{
 		if (first)
-			throw 0;
+			terminatexx("File not open.");
 
 		if (position == 0)
 			(current_buffer == buffer1 ? buffer2 : buffer1)[buffer_size - 1] = e;

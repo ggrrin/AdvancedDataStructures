@@ -29,11 +29,11 @@ public:
 	{
 		std::fstream output_file(chunk_name, std::ios_base::out | std::ios_base::binary | std::ios_base::trunc);
 		if (!output_file.is_open())
-			throw 0;
+			terminatexx("File not opened.");
 
 		output_file.write(reinterpret_cast<char*>(chunk.begin()), chunk.ByteSize());
 		if (!output_file.good())
-			throw 0;
+			terminatexx("File err writing.");
 
 		output_file.close();
 	}
@@ -165,11 +165,12 @@ public:
 	}
 
 
-	bool Create(InputNumberStream& input_file, const std::string &chunk_name, num chunk_byte_size) override
+	bool Create(InputNumberStream& input_file, const std::string &chunk_name, char* memory, num memory_available) override
 	{
+		num half_memory = memory_available / 2;
 		printf("Creating chunk.\n");
-		Chunk chunk(chunk_byte_size);
-		Chunk buffer(chunk_byte_size);
+		Chunk chunk(half_memory, memory);
+		Chunk buffer(half_memory, memory + half_memory);
 
 		printf("Reading chunk.\n");
 		auto ts = std::chrono::steady_clock::now();

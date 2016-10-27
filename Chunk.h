@@ -10,10 +10,17 @@ class Chunk
 	num size = 0;
 
 public:
-	explicit Chunk(num chunk_byte_size) : capacity(chunk_byte_size / static_cast<num>(sizeof(Entry))), chunk(new Entry[static_cast<int>(capacity)]) { }
+	//explicit Chunk(num chunk_byte_size) : 
+	//	capacity(chunk_byte_size / static_cast<num>(sizeof(Entry))),
+	//	chunk(new Entry[static_cast<int>(capacity)]) { }
+
+	Chunk(num chunk_byte_size, char* memory) : 
+		capacity(chunk_byte_size / static_cast<num>(sizeof(Entry))),
+		chunk(reinterpret_cast<Entry*>(memory)) { }
+
 	virtual ~Chunk()
 	{
-		delete chunk;
+		//delete chunk;
 	}
 
 	void AddEntry(Entry entry)
@@ -62,7 +69,7 @@ public:
 	void Shrink(num size)
 	{
 		if (size < 0 || size > capacity)
-			throw 0;
+			terminatexx("Invalid size argument");
 
 		this->size = size;
 	}
