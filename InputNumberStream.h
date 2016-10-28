@@ -123,7 +123,7 @@ public:
 		if (*current == '\0')
 			line_start++;
 
-		while (*current != '\n')
+		while ( current == buf + buf_size || *current != '\n')
 		{
 			if (current >= buf + buf_size )
 			{

@@ -8,7 +8,7 @@ inline void logt(char* msg, std::chrono::time_point<std::chrono::steady_clock> t
 	//auto diff = std::chrono::duration_cast<std::chrono::nanoseconds>(t2 - t1);
 	//auto diff = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1);
 	auto diff = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1);
-	printf("%s %lld ms\n", msg, diff.count());
+	printf("%s %ld ms\n", msg, diff.count());
 }
 
 inline void terminatexx(char* message)

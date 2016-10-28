@@ -103,6 +103,7 @@ public:
 
 class OutputStream
 {
+	bool binnary;
 	FILE* file;
 	num buffer_size;
 	Entry* buffer1;
@@ -112,7 +113,6 @@ class OutputStream
 	bool closed;
 	bool buffer_ready;
 	bool first;
-	bool binnary;
 
 	void write_buffer(Entry* buf, num size)
 	{
@@ -208,12 +208,7 @@ public:
 		if (first)
 			terminatexx("File not open.");
 
-		auto res = current_buffer[position - 1];
-		if(res.GetKey() > 1000000)
-		{
-			terminatexx("wtf");
-		}
-		return res;
+		return current_buffer[position - 1];
 	}
 
 	void rewrite(const Entry& e)

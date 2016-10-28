@@ -125,8 +125,8 @@ void quick_sort_range(Entry* start, Entry* end, std::tuple<num, num> range, num 
 	if (std::get<0>(range) == std::get<1>(range) || trivial_sort(start, end))
 		return;
 
-	if (layer > 2 * log)
-		printf("Layer %llu exceeded in interval %llu %llu\n", layer, start, end);
+	//if (layer > 2 * log)
+	//	printf("Layer %lu exceeded in interval %lu %lu\n", layer, start, end);
 
 	num pivot = std::get<0>(range) / 2 + std::get<1>(range) / 2;//chunk[start].GetVal();
 	if (pivot < std::get<0>(range) || pivot > std::get<1>(range))

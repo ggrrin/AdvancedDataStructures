@@ -37,7 +37,7 @@ public:
 		num chunk_index = 0;
 		while (!input_file.eof())
 		{
-			printf("Creating chunk %llu\n", chunk_index);
+			printf("Creating chunk %lu\n", chunk_index);
 			chunkCreator->Create(input_file, "chunk_0_" + std::to_string(chunk_index), memory, memory_available);
 			chunk_index++;
 		}
@@ -64,7 +64,7 @@ public:
 			}
 			else if (prev.GetVal() > sch_it.GetVal())
 			{
-				printf("reading form chunk %s at %llu \n output stream at %llu \n", input.name.c_str(), input.index, ch_it.index);
+				printf("reading form chunk %s at %lu \n output stream at %lu \n", input.name.c_str(), input.index, ch_it.index);
 				char xxx[255];
 				prev.get_string(xxx);
 				printf("prev %s", xxx);
@@ -153,7 +153,7 @@ public:
 				//std::remove(ch2_path.c_str());
 
 				auto ts_merge = std::chrono::steady_clock::now();
-				printf("Layer %llu (%llu;%llu)", layer, i, i + 1);
+				printf("Layer %lu (%lu;%lu)", layer, i, i + 1);
 				logt("merged in ", ts, ts_merge);
 			}
 
