@@ -8,6 +8,7 @@
 #include "QuickSort.h"
 #include "LogHelp.h"
 #include "SubChunk.h"
+#include "OutputStream.h"
 
 class SimpleChunkCreator : public ChunkCreator
 {
@@ -22,20 +23,25 @@ public:
 				break;
 
 			chunk.AddEntry(e);
+		
 		}
 	}
 
-	void SaveChunk(const Chunk& chunk, const std::string& chunk_name) const
+
+	void SaveChunk(const Chunk& chunk, const std::string& chunk_name, bool binnary) const
 	{
-		std::fstream output_file(chunk_name, std::ios_base::out | std::ios_base::binary | std::ios_base::trunc);
-		if (!output_file.is_open())
-			terminatexx("File not opened.");
+		FILE* f = fopen(chunk_name.c_str(), "wb");
+		if(binnary)
+		{
+			OutputStream::write(chunk.begin(), chunk.Size(), f);
+		}
+		else
+		{
+			OutputStream::write_text(chunk.begin(), chunk.Size(), f);
+		}
 
-		output_file.write(reinterpret_cast<char*>(chunk.begin()), chunk.ByteSize());
-		if (!output_file.good())
-			terminatexx("File err writing.");
 
-		output_file.close();
+		fclose(f);
 	}
 
 	void set_value(bool& first, Entry*& ch_it, Entry*&sch_it) const
@@ -188,7 +194,7 @@ public:
 		auto te_sort = std::chrono::steady_clock::now();
 
 		printf("Saving chunk.\n");
-		SaveChunk(res, chunk_name);
+		SaveChunk(res, chunk_name, input_file.eof() && chunk_name != "chunk_0_0");
 
 		auto te_save = std::chrono::steady_clock::now();
 

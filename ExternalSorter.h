@@ -24,16 +24,8 @@ class ExternalSorter
 	std::string filename;
 	std::unique_ptr<ChunkCreator> chunkCreator;
 	const num gigabyte = 1024llu * 1024llu * 1024llu;
-	const num memory_available = 4llu * gigabyte;
+	const num memory_available = 8llu * gigabyte - 8 * 1024;
 	char* memory;
-
-	//#ifndef half
-	//	const num chunk_byte_size = 4llu * 1024llu * 1024llu * 1024llu;
-	//	const num stream_buffers_size = 225llu * 10000000llu;
-	//#else
-	//	const num chunk_byte_size = 2llu * 1024llu * 1024llu * 1024llu;
-	//	const num stream_buffers_size = 225llu * 10000000llu / 2llu;
-	//#endif
 
 public:
 	ExternalSorter(const std::string& filename_p, std::unique_ptr<ChunkCreator> chunkCreator_p)
@@ -50,23 +42,6 @@ public:
 		}
 		return chunk_index;
 	}
-
-	/*void rewrite_chunk(Entry& last_entry, std::string& ch_out, bool chunk_output)
-	{
-		std::ifstream chunk_decode("chunk_0_0", std::ios::in | std::ios::binary);
-		std::ofstream output_decode(ch_out, std::ios::out | std::ios::binary | std::ios::trunc);
-		if (chunk_decode.is_open() && output_decode.is_open())
-		{
-			WriteRest(last_entry, chunk_output, chunk_decode, output_decode);
-			chunk_decode.close();
-			output_decode.close();
-		}
-		else
-		{
-			terminatexx();
-		}
-		remove("chunk_0_0");
-	}*/
 
 	void set_value(bool& first, OutputStream& ch_it, InStream& input) const
 	{
@@ -103,12 +78,11 @@ public:
 
 				std::string ch1_path = "chunk_" + std::to_string(layer) + "_" + std::to_string(i);
 				std::string ch2_path = "chunk_" + std::to_string(layer) + "_" + std::to_string(i + 1);
-				//std::string ch_out = !chunk_output ? "data.out" : "chunk_" + std::to_string(layer) + "_" + std::to_string(offset);
 				std::string ch_out = "chunk_" + std::to_string(layer + 1) + "_" + std::to_string(i / 2);
 
 				const num avail_stream_memory = memory_available / 3;
 				InStream sch1(ch1_path.c_str(), avail_stream_memory, memory);
-				OutputStream ch_it(ch_out.c_str(), avail_stream_memory, memory + avail_stream_memory);
+				OutputStream ch_it(chunks_count != 2, ch_out.c_str(), avail_stream_memory, memory + avail_stream_memory);
 
 				bool first = true;
 
@@ -130,18 +104,16 @@ public:
 						}
 						else
 						{
-							auto& used_it = sch1;
 							if (sch1_it.GetKey() < sch2_it.GetKey())
 							{
-								used_it = sch1;
+								set_value(first, ch_it, sch1);
 								sch2.read();
 							}
 							else
 							{
-								used_it = sch2;
+								set_value(first, ch_it, sch2);
 								sch1.read();
 							}
-							set_value(first, ch_it, used_it);
 						}
 					}
 
@@ -172,6 +144,9 @@ public:
 			++layer;
 			chunks_count = next_subchunks_count;
 		}
+		std::string res = "chunk_" + std::to_string(layer) + "_0";
+		remove("data.out");
+		rename(res.c_str(), "data.out");
 	}
 
 	void Sort()

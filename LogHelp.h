@@ -14,7 +14,7 @@ inline void logt(char* msg, std::chrono::time_point<std::chrono::steady_clock> t
 inline void terminatexx(char* message)
 {
 	printf("%s\n", message);
-	throw std::exception("%s");
+	throw std::exception(message);
 }
 
 #endif

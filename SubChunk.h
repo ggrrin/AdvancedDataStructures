@@ -57,8 +57,10 @@ public:
 				continue;
 			}
 
+#ifdef _DEBUG
 			if (r->GetVal() < w->GetVal())//TODO
 				terminatexx("Invalid order!");
+#endif
 
 			bool not_same_as_previous = r->GetVal() != w->GetVal();
 			if (not_same_as_previous)

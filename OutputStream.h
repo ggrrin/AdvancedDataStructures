@@ -36,7 +36,7 @@ public:
 		current_buffer(buffer1),
 		position(0),
 		closed(false),
-		end(0xFFFFFFFFFFFFFFFF),//TODO
+		end(0xFFFFFFFFFFFFFFFF),
 		first(true)
 	{
 		if (file == nullptr)
@@ -68,13 +68,7 @@ public:
 		if (eof())
 			terminatexx("End of file.");
 
-		if (position >= buffer_size)
-		{
-			current_buffer = current_buffer == buffer1 ? buffer2 : buffer1;
-			position = 0;
-			first = false;
-			fill_buffer();
-		}
+
 
 		return current_buffer[position];
 	}
@@ -83,6 +77,16 @@ public:
 	{
 		const auto& res = peak();
 		++position;
+
+		//check for next read
+		if (position >= buffer_size)
+		{
+			current_buffer = current_buffer == buffer1 ? buffer2 : buffer1;
+			position = 0;
+			first = false;
+			fill_buffer();
+		}
+
 		return res;
 	}
 };
@@ -98,17 +102,52 @@ class OutputStream
 	bool closed;
 	bool buffer_ready;
 	bool first;
+	bool binnary;
 
-	void write_buffer(num size)
+	void write_buffer(Entry* buf, num size)
 	{
-		num remain_space = size;
-		while (remain_space > 0)
-			remain_space -= fwrite(current_buffer + (size - remain_space), sizeof(Entry), remain_space, file);
+		if (binnary)
+			write(buf, size, file);
+		else
+			write_text(buf, size, file);
 	}
 
 public:
-	OutputStream(const char* path, num available_memory, char* memory) :
-		file(fopen(path, "wb")),
+	template<typename T>
+	static void write(T* buf, num size, FILE* file)
+	{
+		num remain_space = size;
+		while (remain_space > 0)
+			remain_space -= fwrite(buf + (size - remain_space), sizeof(T), remain_space, file);
+	}
+
+	static void write_text(Entry* current_buffer, num size, FILE* file)
+	{
+		char buf[2048];
+		Entry* i = current_buffer;
+
+		num len = 0;
+
+		while (i != current_buffer + size)
+		{
+			for (; i != current_buffer + size; ++i)
+			{
+				if (len < 1750)
+					len += i->get_string(buf + len);
+				else
+					break;
+			}
+
+			write(buf, len, file);
+			len = 0;
+		}
+	}
+
+
+
+	OutputStream(bool binnaryp, const char* path, num available_memory, char* memory) :
+		binnary(binnaryp),
+		file(fopen(path, binnary ? "wb" : "w")),
 		buffer_size(available_memory / sizeof(Entry) / 2),
 		buffer1(reinterpret_cast<Entry*>(memory)),
 		buffer2(reinterpret_cast<Entry*>(memory) + buffer_size),
@@ -130,7 +169,16 @@ public:
 
 	void close()
 	{
-		write_buffer(position);
+		if (!buffer_ready)
+		{
+			write_buffer(current_buffer, position);
+		}
+		else
+		{
+			//previous buffer is full and next is empty => thus write whole previous one
+			write_buffer(current_buffer == buffer1 ? buffer2 : buffer1, buffer_size);
+		}
+
 		fclose(file);
 		//delete[] buffer1;
 		//delete[] buffer2;
@@ -163,7 +211,7 @@ public:
 	{
 		if (buffer_ready && position == 1)
 		{
-			write_buffer(buffer_size);
+			write_buffer(current_buffer == buffer1 ? buffer2 : buffer1, buffer_size);
 			buffer_ready = false;
 		}
 
