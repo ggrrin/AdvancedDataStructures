@@ -153,7 +153,7 @@ public:
 	{
 		Entry* begin = chunk.begin();
 		Entry* end = chunk.end();
-		const num subchunk_byte_size = 1024llu * 1024llu * 1024llu / 256llu;//512 MB //64 // 4MB
+		const num subchunk_byte_size = 1024llu * 1024llu * 1024llu / 2llu;//512 MB //64 // 4MB
 		const num subchunk_size = subchunk_byte_size / sizeof(Entry);
 
 		num size = end - begin;

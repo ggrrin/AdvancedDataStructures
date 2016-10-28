@@ -13,10 +13,6 @@ public:
 
 	Entry(num key_p, num val_p) : key(key_p), val(val_p)
 	{
-		if(GetKey() > 1000000)
-		{
-			terminatexx("wtf123");
-		}
 	}
 
 	static Entry empty;
