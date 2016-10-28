@@ -32,6 +32,14 @@ public:
 		return key == 0;
 	}
 
+	int less(const Entry& e)
+	{
+		if (val < e.GetVal() || (val == e.GetVal() && key < e.GetKey()))
+			return true;
+		else
+			return false;
+	}
+
 	num get_string(char* buffer) const
 	{
 		char* ptr = buffer;
