@@ -4,13 +4,20 @@
 #include "Types.h"
 #include <string>
 #include <cmath>
+#include "LogHelp.h"
 
 struct Entry
 {
 public:
 	Entry() : key(0), val(0) {};
 
-	Entry(num key_p, num val_p) : key(key_p), val(val_p) {}
+	Entry(num key_p, num val_p) : key(key_p), val(val_p)
+	{
+		if(GetKey() > 1000000)
+		{
+			terminatexx("wtf123");
+		}
+	}
 
 	static Entry empty;
 

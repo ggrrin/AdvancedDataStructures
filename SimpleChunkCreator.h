@@ -71,7 +71,7 @@ public:
 			{
 				if (prev->GetKey() > sch_it->GetKey())
 				{
-					*--ch_it = *sch_it;
+					*(--ch_it)++ = *sch_it;
 				}
 			}
 			else
@@ -85,7 +85,7 @@ public:
 	{
 		if (chunks_count == 1)
 		{
-			read.Shrink(subchunks[chunks_count - 1].end() - read.begin());
+			read.Shrink(subchunks[chunks_count - 1].size());//TODO shirk if subchunk shrinked
 			return read;
 		}
 
@@ -118,18 +118,16 @@ public:
 					}
 					else
 					{
-						Entry*& used_it = sch1_it;
 						if (sch1_it->GetKey() < sch2_it->GetKey())
 						{
-							used_it = sch1_it;
+							set_value(first, ch_it, sch1_it);
 							sch2_it++;
 						}
 						else
 						{
-							used_it = sch2_it;
+							set_value(first, ch_it, sch2_it);
 							sch1_it++;
 						}
-						set_value(first, ch_it, used_it);
 					}
 				}
 
@@ -155,11 +153,12 @@ public:
 	{
 		Entry* begin = chunk.begin();
 		Entry* end = chunk.end();
-		const num subchunk_byte_size = 1024llu * 1024llu * 1024llu / 2llu;//512 MB
+		const num subchunk_byte_size = 1024llu * 1024llu * 1024llu / 256llu;//512 MB //64 // 4MB
 		const num subchunk_size = subchunk_byte_size / sizeof(Entry);
+
 		num size = end - begin;
-		if (size <= 0)
-			return chunk;
+		if (subchunk_size > chunk.Capacity()|| size <= 0)
+			terminatexx("Too big subchunk");
 
 		num sub_chunk_count = size / subchunk_size + ((size % subchunk_size) != 0 ? 1 : 0);
 
@@ -207,7 +206,7 @@ public:
 		auto te_sort = std::chrono::steady_clock::now();
 
 		printf("Saving chunk.\n");
-		SaveChunk(res, chunk_name, input_file.eof() && chunk_name != "chunk_0_0");
+		SaveChunk(res, chunk_name, !(input_file.eof() && chunk_name == "chunk_0_0"));
 
 		auto te_save = std::chrono::steady_clock::now();
 

@@ -52,7 +52,6 @@ public:
 
 	~InStream()
 	{
-		if (!closed)
 			close();
 	}
 
@@ -63,6 +62,10 @@ public:
 
 	void close()
 	{
+		if (closed)
+			return;
+
+
 		fclose(file);
 		//delete[] buffer1;
 		//delete[] buffer2;
@@ -175,12 +178,14 @@ public:
 
 	~OutputStream()
 	{
-		if (!closed)
-			close();
+		close();
 	}
 
 	void close()
 	{
+		if (closed)
+			return;
+
 		if (!buffer_ready)
 		{
 			write_buffer(current_buffer, position);
@@ -189,6 +194,7 @@ public:
 		{
 			//previous buffer is full and next is empty => thus write whole previous one
 			write_buffer(current_buffer == buffer1 ? buffer2 : buffer1, buffer_size);
+			write_buffer(current_buffer != buffer1 ? buffer2 : buffer1, position);
 		}
 
 		fclose(file);
@@ -202,10 +208,12 @@ public:
 		if (first)
 			terminatexx("File not open.");
 
-		if (position == 0)
-			return (current_buffer == buffer1 ? buffer2 : buffer1)[buffer_size - 1];
-		else
-			return current_buffer[position - 1];
+		auto res = current_buffer[position - 1];
+		if(res.GetKey() > 1000000)
+		{
+			terminatexx("wtf");
+		}
+		return res;
 	}
 
 	void rewrite(const Entry& e)
@@ -213,10 +221,7 @@ public:
 		if (first)
 			terminatexx("File not open.");
 
-		if (position == 0)
-			(current_buffer == buffer1 ? buffer2 : buffer1)[buffer_size - 1] = e;
-		else
-			current_buffer[position - 1] = e;
+		current_buffer[position - 1] = e;
 	}
 
 	void write(const Entry& e)

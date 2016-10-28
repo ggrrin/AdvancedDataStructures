@@ -24,7 +24,8 @@ class ExternalSorter
 	std::string filename;
 	std::unique_ptr<ChunkCreator> chunkCreator;
 	const num gigabyte = 1024llu * 1024llu * 1024llu;
-	const num memory_available = 8llu * gigabyte - 8 * 1024;
+	//const num memory_available = 8llu * gigabyte - 8 * 1024;
+	const num memory_available = 16llu * 1024llu * 1024llu; ///15 strangly crash in relesase
 	char* memory;
 
 public:
@@ -139,6 +140,9 @@ public:
 				}
 				else
 				{
+					ch_it.close();
+					sch1.close();
+					remove(ch_out.c_str());
 					std::rename(ch1_path.c_str(), ch_out.c_str());
 				}
 
