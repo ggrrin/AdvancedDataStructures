@@ -61,6 +61,18 @@ public:
 					ch_it.rewrite(sch_it);
 				}
 			}
+			else if (prev.GetVal() > sch_it.GetVal())
+			{
+				printf("reading form chunk %s at %llu \n output stream at %llu \n", input.name.c_str(), input.index, ch_it.index);
+				char xxx[255];
+				prev.get_string(xxx);
+				printf("prev %s", xxx);
+				sch_it.get_string(xxx);
+				printf("readed %s", xxx);
+				
+				terminatexx("Invalid Order!!!!");
+
+			}
 			else
 				ch_it.write(sch_it);
 		}
@@ -133,8 +145,8 @@ public:
 				sch1.close();
 				ch_it.close();
 
-				std::remove(ch1_path.c_str());
-				std::remove(ch2_path.c_str());
+				//std::remove(ch1_path.c_str());
+				//std::remove(ch2_path.c_str());
 
 				auto ts_merge = std::chrono::steady_clock::now();
 				printf("Layer %llu (%llu;%llu)", layer, i, i + 1);

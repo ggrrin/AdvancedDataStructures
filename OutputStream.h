@@ -2,6 +2,7 @@
 #define output_stream_
 #include "Entry.h"
 #include <stdio.h>
+#include <string>
 
 class InStream
 {
@@ -28,6 +29,9 @@ class InStream
 		}
 	}
 public:
+	num index;
+	std::string name;
+
 	InStream(const char* path, num available_memory, char* memory) :
 		file(fopen(path, "rb")),
 		buffer_size(available_memory / sizeof(Entry) / 2),
@@ -37,7 +41,9 @@ public:
 		position(0),
 		closed(false),
 		end(0xFFFFFFFFFFFFFFFF),
-		first(true)
+		first(true),
+		index(0),
+		name(path)
 	{
 		if (file == nullptr)
 			terminatexx("File not opened");
@@ -77,6 +83,7 @@ public:
 	{
 		const auto& res = peak();
 		++position;
+		++index;
 
 		//check for next read
 		if (position >= buffer_size)
@@ -113,6 +120,9 @@ class OutputStream
 	}
 
 public:
+	num index;
+	std::string name;
+
 	template<typename T>
 	static void write(T* buf, num size, FILE* file)
 	{
@@ -155,7 +165,9 @@ public:
 		position(0),
 		closed(false),
 		buffer_ready(false),
-		first(true)
+		first(true),
+		index(0),
+		name(path)
 	{
 		if (file == nullptr)
 			terminatexx("File not open");
@@ -223,6 +235,7 @@ public:
 		}
 		current_buffer[position] = e;
 		++position;
+		++index;
 		first = false;
 	}
 };

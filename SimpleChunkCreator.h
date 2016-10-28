@@ -30,6 +30,19 @@ public:
 
 	void SaveChunk(const Chunk& chunk, const std::string& chunk_name, bool binnary) const
 	{
+		Entry* e = chunk.begin();
+		Entry prev = *e;
+
+		for(++e; e != chunk.end(); ++e)
+		{
+			if(prev.GetVal() > e->GetVal())
+			{
+				terminatexx("Invalid order when saving");
+			}
+
+		}
+
+
 		FILE* f = fopen(chunk_name.c_str(), "wb");
 		if(binnary)
 		{
