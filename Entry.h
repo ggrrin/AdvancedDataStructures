@@ -2,9 +2,7 @@
 #define entry_
 
 #include "Types.h"
-#include <string>
 #include <cmath>
-#include "LogHelp.h"
 
 struct Entry
 {
