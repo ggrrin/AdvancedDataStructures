@@ -11,7 +11,7 @@ class InputNumberStream
 	const num buf_capacity = 2*1024;
 	bool closed = false;
 	bool eof_f = false;
-	num line;
+	line_t line;
 	FILE* file;
 	char* buf;
 	num buf_size;

@@ -9,13 +9,13 @@ struct Entry
 public:
 	Entry() : key(0), val(0) {};
 
-	Entry(num key_p, num val_p) : key(key_p), val(val_p)
+	Entry(line_t key_p, num val_p) : key(key_p), val(val_p)
 	{
 	}
 
 	static Entry empty;
 
-	const num& GetKey() const
+	const line_t& GetKey() const
 	{
 		return key;
 	}
@@ -66,7 +66,7 @@ public:
 	}
 
 private:
-	num key;
+	line_t key;
 	num val;
 
 	num get_number_of_digits(num number) const
