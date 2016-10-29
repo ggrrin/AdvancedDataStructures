@@ -13,16 +13,16 @@
 
 struct layer_rec
 {
-	SubChunk* next_sub_chunks;
-	num next_chunks_count;
+	SubChunk ch1;
+	SubChunk ch2;
+	SubChunk ch3;
 	SubChunk buffer;
-	bool need_dealocation;
 
-	layer_rec(SubChunk* next_sub_chunks_p, num next_chunks_count_p, SubChunk buffer_p, bool need_dealocation_p = true) :
-		next_sub_chunks(next_sub_chunks_p),
-		next_chunks_count(next_chunks_count_p),
-		buffer(buffer_p),
-		need_dealocation(need_dealocation_p){};
+	layer_rec(const SubChunk& ch1p, const SubChunk& ch2p, const SubChunk& ch3p, const SubChunk& bufferp) :
+		ch1(ch1p),
+		ch2(ch2p),
+		ch3(ch3p),
+		buffer(bufferp) {};
 };
 
 
@@ -43,6 +43,42 @@ public:
 		}
 	}
 
+
+	void write_chunks(const SubChunk& sch1, const SubChunk& sch2, const SubChunk& sch3, const SubChunk& buffer, const std::string& chunk_name, bool binnary) const
+	{
+		OutputStream file(binnary, chunk_name.c_str(), buffer.size() * sizeof(Entry), reinterpret_cast<char*>(buffer.begin()));
+
+		Entry* sch1_it = sch1.begin();
+		Entry* sch2_it = sch2.begin();
+		Entry* sch3_it = sch3.begin();
+
+		bool first = true;
+
+		while (sch1_it != sch1.end() && sch2_it != sch2.end() && sch3_it != sch3.end())
+		{
+			Entry** heads[3];
+			heads[0] = &sch1_it;
+			heads[1] = &sch2_it;
+			heads[2] = &sch3_it;
+			trivial_sort(heads);
+			write_value(first, file, *heads[0]);
+		}
+
+		merge2(first, file, sch1_it, sch2_it, sch1, sch2);
+		merge2(first, file, sch1_it, sch3_it, sch1, sch3);
+		merge2(first, file, sch2_it, sch3_it, sch2, sch3);
+
+		while (sch3_it != sch3.end())
+			write_value(first, file, sch3_it);
+
+		while (sch2_it != sch2.end())
+			write_value(first, file, sch2_it);
+
+		while (sch1_it != sch1.end())
+			write_value(first, file, sch1_it);
+
+		file.close();
+	}
 
 	void SaveChunk(const Chunk& chunk, const std::string& chunk_name, bool binnary) const
 	{
@@ -126,57 +162,23 @@ public:
 	}
 
 
-	void trivial_sort(Entry** start) const
+	void trivial_sort(Entry** start[]) const
 	{
-		Entry** a = (start);
-		Entry** b = ((start + 1));
-		Entry** c = ((start + 2));
-		if (!(*a)->less(**b))
+		Entry*** a = &start[0];
+		Entry*** b = &start[1];
+		Entry*** c = &start[2];
+		if (!(**a)->less(***b))
 			std::swap(*a, *b);
 
-		if (!(*b)->less(**c))
+		if (!(**b)->less(***c))
 			std::swap(*b, *c);
 
-		if (!(*a)->less(**b))
+		if (!(**a)->less(***b))
 			std::swap(*a, *b);
 	}
 
 
-	void write_chunks(const SubChunk& sch1, const SubChunk& sch2, const SubChunk& sch3, const SubChunk& buffer) const
-	{
-		OutputStream file(false, "chunk-test", buffer.size() * sizeof(Entry), reinterpret_cast<char*>(buffer.begin())); //TODO text mode
 
-		Entry* sch1_it = sch1.begin();
-		Entry* sch2_it = sch2.begin();
-		Entry* sch3_it = sch3.begin();
-
-		bool first = true;
-
-		while (sch1_it != sch1.end() && sch2_it != sch2.end() && sch3_it != sch3.end())
-		{
-			Entry* heads[3];
-			heads[0] = sch1_it;
-			heads[1] = sch2_it;
-			heads[2] = sch3_it;
-			trivial_sort(heads);
-			write_value(first, file, heads[0]);
-		}
-
-		merge2(first, file, sch1_it, sch2_it, sch1, sch2);
-		merge2(first, file, sch1_it, sch3_it, sch1, sch3);
-		merge2(first, file, sch2_it, sch3_it, sch2, sch3);
-
-		while (sch3_it != sch3.end())
-			write_value(first, file, sch3_it);
-
-		while (sch2_it != sch2.end())
-			write_value(first, file, sch2_it);
-
-		while (sch1_it != sch1.end())
-			write_value(first, file, sch1_it);
-
-		file.close();
-	}
 
 	void set_value(bool& first, Entry*& ch_it, Entry*&sch_it) const
 	{
@@ -204,7 +206,7 @@ public:
 
 
 
-	void MergeSort(SubChunk& read, SubChunk& buffer, SubChunk* subchunks, num chunks_count) const
+	layer_rec MergeSort(SubChunk& read, SubChunk& buffer, SubChunk* subchunks, num chunks_count) const
 	{
 		while (chunks_count > 3)
 		{
@@ -268,17 +270,18 @@ public:
 
 		}
 
-		if(chunks_count != 3)
+		if (chunks_count != 3)
 			terminatexx("Chunk count is not 3");
 
-		write_chunks(subchunks[0], subchunks[1], subchunks[2], buffer);
+		auto res = layer_rec(subchunks[0], subchunks[1], subchunks[2], buffer);
 		delete[] subchunks;
+		return res;
 	}
 
 
 	void BackwardMerge(SubChunk& buffer, SubChunk*& subchunks, num& chunks_count) const
 	{
-		if(chunks_count < 4)
+		if (chunks_count < 4)
 			return;
 
 		num next_subchunks_count = chunks_count / 2 + (chunks_count % 2);
@@ -335,7 +338,7 @@ public:
 
 		delete[] subchunks;
 		subchunks = next_subchunks;
-		chunks_count = next_subchunks_count; 
+		chunks_count = next_subchunks_count;
 	}
 
 
@@ -365,7 +368,7 @@ public:
 
 
 
-	void Sort(SubChunk& chunk, num chunk_capacity, SubChunk& buffer) const
+	layer_rec Sort(SubChunk& chunk, num chunk_capacity, SubChunk& buffer) const
 	{
 		Entry* begin = chunk.begin();
 		Entry* end = chunk.end();
@@ -388,10 +391,11 @@ public:
 
 
 		auto ts = std::chrono::steady_clock::now();
-		MergeSort(chunk, buffer, subchunks, sub_chunk_count);
+		auto res = MergeSort(chunk, buffer, subchunks, sub_chunk_count);
 		auto te = std::chrono::steady_clock::now();
 		logt("Merging phase ", ts, te);
 		delete[] subchunks;
+		return res;
 	}
 
 
@@ -415,18 +419,18 @@ public:
 
 		SubChunk chunk_sb(chunk.begin(), chunk.end());
 		SubChunk buffer_sb(buffer.begin(), buffer.end());
-		Sort(chunk_sb, chunk.Capacity(), buffer_sb);
+		auto res = Sort(chunk_sb, chunk.Capacity(), buffer_sb);
 
 		auto te_sort = std::chrono::steady_clock::now();
 
-		/*		printf("Saving chunk.\n");
-				SaveChunk(res, chunk_name, !(input_file.eof() && chunk_name == "chunk_0_0"));
+		printf("Saving chunk.\n");
+		write_chunks(res.ch1, res.ch2, res.ch3, res.buffer, chunk_name, !(input_file.eof() && chunk_name == "chunk_0_0"));
 
-				auto te_save = std::chrono::steady_clock::now();
+		auto te_save = std::chrono::steady_clock::now();
 
-				logt("Reading chunk in", ts, te_read);
-				logt("Sorting chunk in", te_read, te_sort);
-				logt("Saving chunk in", te_sort, te_save);*/
+		logt("Reading chunk in", ts, te_read);
+		logt("Sorting chunk in", te_read, te_sort);
+		logt("Saving chunk in", te_sort, te_save);
 		return true;
 	}
 };
