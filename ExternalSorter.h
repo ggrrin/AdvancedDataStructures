@@ -13,7 +13,6 @@
 #include <chrono>
 #include "LogHelp.h"
 
-#define half
 
 class ExternalSorter
 {
@@ -33,7 +32,9 @@ public:
 		num chunk_index = 0;
 		while (!input_file.eof())
 		{
+#ifdef time_logs
 			printf("Creating chunk %lu\n", chunk_index);
+#endif
 			chunkCreator->Create(input_file, "chunk_0_" + std::to_string(chunk_index), memory, memory_available);
 			chunk_index++;
 		}
@@ -58,6 +59,7 @@ public:
 					ch_it.rewrite(sch_it);
 				}
 			}
+#ifdef time_logs
 			else if (prev.GetVal() > sch_it.GetVal())
 			{
 				printf("reading form chunk %s at %lu \n output stream at %lu \n", input.name.c_str(), input.index, ch_it.index);
@@ -70,6 +72,7 @@ public:
 				terminatexx("Invalid Order!!!!");
 
 			}
+#endif
 			else
 				ch_it.write(sch_it);
 		}
@@ -83,7 +86,9 @@ public:
 
 			for (num i = 0; i < chunks_count; i += 2)
 			{
+#ifdef time_logs
 				auto ts = std::chrono::steady_clock::now();
+#endif				
 
 				std::string ch1_path = "chunk_" + std::to_string(layer) + "_" + std::to_string(i);
 				std::string ch2_path = "chunk_" + std::to_string(layer) + "_" + std::to_string(i + 1);
@@ -148,9 +153,11 @@ public:
 				std::remove(ch1_path.c_str());
 				std::remove(ch2_path.c_str());
 
+#ifdef time_logs
 				auto ts_merge = std::chrono::steady_clock::now();
 				printf("Layer %lu (%lu;%lu)", layer, i, i + 1);
 				logt("merged in ", ts, ts_merge);
+#endif
 			}
 
 			++layer;
@@ -163,24 +170,35 @@ public:
 
 	void Sort()
 	{
+#ifdef time_logs
 		auto tss = std::chrono::steady_clock::now();
 		printf("Allocating memory.\n");
+#endif
+
 		memory = new char[memory_available];
 
-
+#ifdef time_logs
 		printf("Creating intial chunks.\n");
+#endif
+
 		InputNumberStream input_file(filename.c_str());
 		num chunks_count = CreateSortedChunks(input_file, memory);
 
 		input_file.close();
 
+#ifdef time_logs
 		auto ts = std::chrono::steady_clock::now();
 		printf("Merging chunks.\n");
+#endif
+
 		MergeSort(chunks_count, 0);
+
+#ifdef time_logs
 		auto te = std::chrono::steady_clock::now();
 		logt("External merging in ", ts, te);
 		logt("TOTAL in", tss, te);
 		delete[] memory;
+#endif
 	}
 
 };

@@ -173,6 +173,9 @@ public:
 
 	layer_rec MergeSort(SubChunk& read, SubChunk& buffer, SubChunk* subchunks, num chunks_count) const
 	{
+#ifdef time_logs
+			printf("before while\n");
+#endif
 		while (chunks_count > 3)
 		{
 			num next_subchunks_count = chunks_count / 2 + (chunks_count % 2);
@@ -180,18 +183,23 @@ public:
 
 			for (num i = 0; i < chunks_count; i += 2)
 			{
+#ifdef time_logs
+			printf("Subchunk %lld from %lld\n", i, chunks_count);
+#endif
 				Entry* ch_it = buffer.begin();
 				SubChunk& sch1 = subchunks[i];
-				SubChunk& sch2 = subchunks[i + 1];
+				SubChunk*  sch2 = nullptr; 
 
 				Entry* sch1_it = sch1.begin();
-				Entry* sch2_it = sch2.begin();
 				Entry* sch_o_begin = ch_it;
 				bool first = true;
 
 				if (i + 1 != chunks_count)
 				{
-					while (sch1_it != sch1.end() && sch2_it != sch2.end())
+					sch2 = subchunks + i + 1;
+					Entry* sch2_it = sch2->begin();
+					
+					while (sch1_it != sch1.end() && sch2_it != sch2->end())
 					{
 						if (sch1_it->GetVal() < sch2_it->GetVal())
 						{
@@ -217,7 +225,7 @@ public:
 						}
 					}
 
-					while (sch2_it != sch2.end())
+					while (sch2_it != sch2->end())
 						set_value(first, ch_it, sch2_it);
 				}
 
@@ -225,7 +233,7 @@ public:
 					set_value(first, ch_it, sch1_it);
 
 				next_subchunks[i / 2] = SubChunk(sch_o_begin, ch_it);
-				buffer = SubChunk(ch_it, sch2.end());
+				buffer = SubChunk(ch_it, sch2 != nullptr ?  sch2->end() : sch1.end());
 			}
 
 			delete[] subchunks;
@@ -235,6 +243,9 @@ public:
 
 		}
 
+#ifdef time_logs
+			printf("Done lets get to triple merging bw\n");
+#endif
 		if (chunks_count == 0)
 			terminatexx("No chunk.");
 
@@ -249,6 +260,9 @@ public:
 
 	void BackwardMerge(SubChunk& buffer, SubChunk*& subchunks, num& chunks_count) const
 	{
+#ifdef time_logs
+			printf("Backward function\n");
+#endif
 		if (chunks_count < 4)
 			return;
 
@@ -257,17 +271,22 @@ public:
 
 		for (snum i = chunks_count - 1; i >= 0; i -= 2)
 		{
+#ifdef time_logs
+			printf("Backwrd subchunk %lld from %lld\n", i, chunks_count);
+#endif
 			Entry* ch_it = buffer.end() - 1;
 			SubChunk& sch1 = subchunks[i];
-			SubChunk& sch2 = subchunks[i - 1];
+			SubChunk* sch2 = nullptr; 
 
 			Entry* sch1_it = sch1.end() - 1;
-			Entry* sch2_it = sch2.end() - 1;
 			bool first = true;
 
 			if (i - 1 != -1)
 			{
-				while (sch1_it != sch1.begin() - 1 && sch2_it != sch2.begin() - 1)
+				sch2 = subchunks + i - 1;
+				Entry* sch2_it = sch2->end() - 1;
+
+				while (sch1_it != sch1.begin() - 1 && sch2_it != sch2->begin() - 1)
 				{
 					if (sch1_it->GetVal() > sch2_it->GetVal())
 					{
@@ -293,7 +312,7 @@ public:
 					}
 				}
 
-				while (sch2_it != sch2.begin() - 1)
+				while (sch2_it != sch2->begin() - 1)
 					set_value_max(first, ch_it, sch2_it);
 			}
 
@@ -301,9 +320,12 @@ public:
 				set_value_max(first, ch_it, sch1_it);
 
 			next_subchunks[i / 2] = SubChunk(ch_it + 1, buffer.end());
-			buffer = SubChunk(sch2.begin(), ch_it + 1);
+			buffer = SubChunk(sch2 != nullptr ? sch2->begin() : sch1.begin(), ch_it + 1);
 		}
 
+#ifdef time_logs
+			printf("Delete prev bw\n");
+#endif
 		delete[] subchunks;
 		subchunks = next_subchunks;
 		
@@ -348,6 +370,9 @@ public:
 			subchunks[i] = SubChunk(beg_i, std::min(beg_i + subchunk_size, chunk.end()));
 			subchunks[i].sort();
 			sum_size += subchunks[i].size();
+#ifdef time_logs
+			printf("%lld from %lld done\n", i+1,sub_chunk_count);
+#endif
 		}
 
 #ifdef time_logs
