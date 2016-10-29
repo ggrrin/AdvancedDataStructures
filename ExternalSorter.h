@@ -2,17 +2,13 @@
 #define External_Sorter_
 
 #include <iostream>
-#include <cstdio>
-#include <cmath>
 #include <fstream>
 #include <memory>
 #include <string>
-#include <algorithm>
 #include "ChunkCreator.h"
 #include "Types.h"
 #include "Entry.h"
 #include "InputNumberStream.h"
-#include <errno.h> 
 #include "OutputStream.h"
 #include <chrono>
 #include "LogHelp.h"
@@ -185,7 +181,6 @@ public:
 		logt("External merging in ", ts, te);
 		logt("TOTAL in", tss, te);
 		delete[] memory;
-		logt("Memory deleted", tss, te);
 	}
 
 };

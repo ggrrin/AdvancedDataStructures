@@ -44,7 +44,7 @@ public:
 	}
 
 
-	void write_chunks(const SubChunk& sch1, const SubChunk& sch2, const SubChunk& sch3, const SubChunk& buffer, const std::string& chunk_name, bool binnary) const
+	void write_chunks(const SubChunk& sch1, const SubChunk& sch2, const SubChunk& sch3, SubChunk& buffer, const std::string& chunk_name, bool binnary) const
 	{
 		OutputStream file(binnary, chunk_name.c_str(), buffer.size() * sizeof(Entry), reinterpret_cast<char*>(buffer.begin()));
 
@@ -270,10 +270,13 @@ public:
 
 		}
 
-		if (chunks_count != 3)
-			terminatexx("Chunk count is not 3");
+		if (chunks_count == 0)
+			terminatexx("No chunk.");
 
-		auto res = layer_rec(subchunks[0], subchunks[1], subchunks[2], buffer);
+		auto res = layer_rec(subchunks[0],
+			chunks_count > 1 ? subchunks[1] : SubChunk(nullptr, nullptr),
+			chunks_count > 2 ? subchunks[2] : SubChunk(nullptr, nullptr),
+			buffer);
 		delete[] subchunks;
 		return res;
 	}
@@ -394,7 +397,6 @@ public:
 		auto res = MergeSort(chunk, buffer, subchunks, sub_chunk_count);
 		auto te = std::chrono::steady_clock::now();
 		logt("Merging phase ", ts, te);
-		delete[] subchunks;
 		return res;
 	}
 
@@ -404,6 +406,7 @@ public:
 		num fourth_memory = memory_available / 4;
 		printf("Creating chunk.\n");
 		Chunk buffer(fourth_memory, memory);
+		buffer.Shrink(buffer.Capacity());
 		Chunk chunk(3 * fourth_memory, memory + fourth_memory);
 
 		printf("Reading chunk.\n");
