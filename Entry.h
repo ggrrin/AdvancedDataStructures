@@ -4,6 +4,7 @@
 #include "Types.h"
 #include <cmath>
 
+#pragma pack(1)  
 struct Entry
 {
 public:
@@ -106,4 +107,5 @@ private:
 		return true;
 	}
 };
+#pragma pack()  
 #endif

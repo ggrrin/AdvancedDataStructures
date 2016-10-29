@@ -40,6 +40,8 @@ public:
 
 	void write_chunks(const SubChunk& sch1, const SubChunk& sch2, const SubChunk& sch3, SubChunk& buffer, const std::string& chunk_name, bool binnary) const
 	{
+		printf("Buffer size: %lld MB.\n", buffer.size() * sizeof(Entry) / 1024llu / 1024llu );  
+
 		OutputStream file(binnary, chunk_name.c_str(), buffer.size() * sizeof(Entry), reinterpret_cast<char*>(buffer.begin()));
 
 		Entry* sch1_it = sch1.begin();
@@ -359,7 +361,7 @@ public:
 
 	layer_rec Sort(SubChunk& chunk, num chunk_capacity, SubChunk& buffer) const
 	{
-		num subchunk_size = chunk_capacity / 24llu;
+		num subchunk_size = chunk_capacity / 254llu;//384llu;
 		num sub_chunk_count = chunk.size() / subchunk_size + ((chunk.size() % subchunk_size) != 0 ? 1 : 0);
 
 		SubChunk* subchunks = new SubChunk[sub_chunk_count];
