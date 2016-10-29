@@ -23,12 +23,7 @@ public:
 
 		auto te_sort = std::chrono::steady_clock::now();
 
-
-		//TODOend_ = begin_ + Unique(begin_, end_);
-
-		auto te_unique = std::chrono::steady_clock::now();
 		logt("Subchunk sorted in ", ts, te_sort);
-		//TODOlogt("Subchunk uniqued in ", te_sort, te_unique);
 	}
 
 	num size() const
@@ -44,33 +39,6 @@ public:
 	Entry* end() const
 	{
 		return end_;
-	}
-
-	num Unique(Entry* begin, Entry* end)
-	{
-		Entry* w = nullptr;
-		for (Entry* r = begin; r != end; r++)
-		{
-			if (w == nullptr)
-			{
-				w = r;
-				continue;
-			}
-
-			if (r->GetVal() < w->GetVal())//TODO
-				terminatexx("Invalid order!");
-
-			bool not_same_as_previous = r->GetVal() != w->GetVal();
-			if (not_same_as_previous)
-				w++;
-
-			if (w != r)
-			{
-				if (not_same_as_previous || r->GetKey() < w->GetKey())
-					*w = *r;
-			}
-		}
-		return ++w - begin;//new size
 	}
 
 };

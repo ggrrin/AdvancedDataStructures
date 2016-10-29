@@ -2,6 +2,7 @@
 #define simple_chunk_creator_
 
 #include <memory>
+#include <algorithm>
 #include "ChunkCreator.h"
 #include "Chunk.h"
 #include "Entry.h"
@@ -300,7 +301,7 @@ public:
 			Entry* sch2_it = sch2.end() - 1;
 			bool first = true;
 
-			if (i - 1 != 0)
+			if (i - 1 != -1)
 			{
 				while (sch1_it != sch1.begin() - 1 && sch2_it != sch2.begin() - 1)
 				{
@@ -341,6 +342,7 @@ public:
 
 		delete[] subchunks;
 		subchunks = next_subchunks;
+		
 		chunks_count = next_subchunks_count;
 	}
 
@@ -370,11 +372,18 @@ public:
 	}
 
 
+	Entry* find(Entry* begin, Entry* end) const
+	{
+		auto val = std::find(begin, end, Entry(825801500,13));
+		if(val != end)
+		{
+			printf("je to tu\n");
+		}
+		return val;
+	}
 
 	layer_rec Sort(SubChunk& chunk, num chunk_capacity, SubChunk& buffer) const
 	{
-		Entry* begin = chunk.begin();
-		Entry* end = chunk.end();
 		const num subchunk_byte_size = 1024llu * 1024llu * 1024llu / 2llu;//512 MB //64 // 4MB
 		//const num subchunk_size = subchunk_byte_size / sizeof(Entry);
 
@@ -384,12 +393,14 @@ public:
 		SubChunk* subchunks = new SubChunk[sub_chunk_count];
 
 		num sum_size = 0;
-		Entry* beg_i = begin;
+		Entry* beg_i = chunk.begin();
 		for (num i = 0; i < sub_chunk_count; ++i, beg_i += subchunk_size)
 		{
-			subchunks[i] = SubChunk(beg_i, std::min(beg_i + subchunk_size, end));
+			subchunks[i] = SubChunk(beg_i, std::min(beg_i + subchunk_size, chunk.end()));
 			subchunks[i].sort();
 			sum_size += subchunks[i].size();
+
+
 		}
 
 

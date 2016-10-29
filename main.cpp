@@ -61,12 +61,7 @@ void test_3merger()
 	Entry buf[2048];
 
 
-	s.write_chunks(
-		SubChunk(c, c + 3),
-		SubChunk(a, a + 6),
-		SubChunk(b, b + 4),
-		SubChunk(buf, buf + 2048),
-		"chunk-test", false);
+	//s.write_chunks( SubChunk(c, c + 3), SubChunk(a, a + 6), SubChunk(b, b + 4), SubChunk(buf, buf + 2048), "chunk-test", false);
 }
 
 int main(int argc, char *argv[])

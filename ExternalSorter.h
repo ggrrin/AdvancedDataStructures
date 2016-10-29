@@ -145,8 +145,8 @@ public:
 				sch1.close();
 				ch_it.close();
 
-				//std::remove(ch1_path.c_str());
-				//std::remove(ch2_path.c_str());
+				std::remove(ch1_path.c_str());
+				std::remove(ch2_path.c_str());
 
 				auto ts_merge = std::chrono::steady_clock::now();
 				printf("Layer %lu (%lu;%lu)", layer, i, i + 1);
