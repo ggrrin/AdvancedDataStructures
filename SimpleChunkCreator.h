@@ -1,6 +1,7 @@
 #ifndef simple_chunk_creator_
 #define simple_chunk_creator_
 
+#include <memory>
 #include "ChunkCreator.h"
 #include "Chunk.h"
 #include "Entry.h"
@@ -15,11 +16,13 @@ struct layer_rec
 	SubChunk* next_sub_chunks;
 	num next_chunks_count;
 	SubChunk buffer;
+	bool need_dealocation;
 
-	layer_rec(SubChunk* next_sub_chunks_p, num next_chunks_count_p, SubChunk buffer_p) :
+	layer_rec(SubChunk* next_sub_chunks_p, num next_chunks_count_p, SubChunk buffer_p, bool need_dealocation_p = true) :
 		next_sub_chunks(next_sub_chunks_p),
-		next_chunks_count(next_chunks_count),
-		buffer(buffer_p) {};
+		next_chunks_count(next_chunks_count_p),
+		buffer(buffer_p),
+		need_dealocation(need_dealocation_p){};
 };
 
 
@@ -93,7 +96,7 @@ public:
 		sch_it++;
 	}
 
-	void merge2(bool& first, OutputStream& ch_it, Entry*&sch1_it, Entry*&sch2_it, SubChunk& sch1, SubChunk& sch2) const
+	void merge2(bool& first, OutputStream& ch_it, Entry*&sch1_it, Entry*&sch2_it, const SubChunk& sch1, const SubChunk& sch2) const
 	{
 		while (sch1_it != sch1.end() && sch2_it != sch2.end())
 		{
@@ -139,13 +142,9 @@ public:
 	}
 
 
-	void write_chunks(SubChunk* subchunks, const SubChunk& buffer) const
+	void write_chunks(const SubChunk& sch1, const SubChunk& sch2, const SubChunk& sch3, const SubChunk& buffer) const
 	{
 		OutputStream file(false, "chunk-test", buffer.size() * sizeof(Entry), reinterpret_cast<char*>(buffer.begin())); //TODO text mode
-
-		SubChunk& sch1 = subchunks[0];
-		SubChunk& sch2 = subchunks[1];
-		SubChunk& sch3 = subchunks[2];
 
 		Entry* sch1_it = sch1.begin();
 		Entry* sch2_it = sch2.begin();
@@ -262,19 +261,26 @@ public:
 				buffer = SubChunk(ch_it, sch2.end());
 			}
 
-			auto res = BackwardMerge(buffer, next_subchunks, next_subchunks_count);
-			delete[] next_subchunks;
-			subchunks = res.next_sub_chunks;
-			chunks_count = res.next_chunks_count;
-			buffer = res.buffer;
+			delete[] subchunks;
+			BackwardMerge(buffer, next_subchunks, next_subchunks_count);
+			subchunks = next_subchunks;
+			chunks_count = next_subchunks_count;
+
 		}
 
-		write_chunks(subchunks, buffer);
+		if(chunks_count != 3)
+			terminatexx("Chunk count is not 3");
+
+		write_chunks(subchunks[0], subchunks[1], subchunks[2], buffer);
+		delete[] subchunks;
 	}
 
 
-	layer_rec BackwardMerge(SubChunk& buffer, SubChunk* subchunks, num chunks_count) const
+	void BackwardMerge(SubChunk& buffer, SubChunk*& subchunks, num& chunks_count) const
 	{
+		if(chunks_count < 4)
+			return;
+
 		num next_subchunks_count = chunks_count / 2 + (chunks_count % 2);
 		SubChunk* next_subchunks = new SubChunk[next_subchunks_count];
 
@@ -286,7 +292,6 @@ public:
 
 			Entry* sch1_it = sch1.end() - 1;
 			Entry* sch2_it = sch2.end() - 1;
-			Entry* sch_o_begin = ch_it;
 			bool first = true;
 
 			if (i - 1 != 0)
@@ -324,11 +329,13 @@ public:
 			while (sch1_it != sch1.begin() - 1)
 				set_value_max(first, ch_it, sch1_it);
 
-			next_subchunks[i / 2] = SubChunk(ch_it + 1, sch_o_begin);
-			buffer = SubChunk(sch1.begin(), ch_it + 1);
+			next_subchunks[i / 2] = SubChunk(ch_it + 1, buffer.end());
+			buffer = SubChunk(sch2.begin(), ch_it + 1);
 		}
 
-		return layer_rec(next_subchunks, next_subchunks_count, buffer);
+		delete[] subchunks;
+		subchunks = next_subchunks;
+		chunks_count = next_subchunks_count; 
 	}
 
 
@@ -392,8 +399,8 @@ public:
 	{
 		num fourth_memory = memory_available / 4;
 		printf("Creating chunk.\n");
-		Chunk buffer(fourth_memory, memory + fourth_memory);
-		Chunk chunk(3 * fourth_memory, memory);
+		Chunk buffer(fourth_memory, memory);
+		Chunk chunk(3 * fourth_memory, memory + fourth_memory);
 
 		printf("Reading chunk.\n");
 		auto ts = std::chrono::steady_clock::now();
