@@ -2,6 +2,7 @@
 #include "SimpleChunkCreator.h"
 #include <memory>
 #include "InnerSortTest.h"
+#define time_logs
 
 void input_stream_test()
 {

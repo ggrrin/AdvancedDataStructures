@@ -1,7 +1,6 @@
 #ifndef simple_chunk_creator_
 #define simple_chunk_creator_
 
-#include <memory>
 #include <algorithm>
 #include "ChunkCreator.h"
 #include "Chunk.h"
@@ -33,15 +32,9 @@ public:
 
 	void ReadChunk(InputNumberStream& input_file, Chunk& chunk) const
 	{
-		while (!chunk.IsFull())
-		{
-			Entry e = input_file.read_next();
-			if (e == Entry::empty)
-				break;
-
+		Entry e;
+		while (!chunk.IsFull() && (e = input_file.read_next()) != Entry::empty)
 			chunk.AddEntry(e);
-
-		}
 	}
 
 
@@ -79,35 +72,6 @@ public:
 			write_value(first, file, sch1_it);
 
 		file.close();
-	}
-
-	void SaveChunk(const Chunk& chunk, const std::string& chunk_name, bool binnary) const
-	{
-		Entry* e = chunk.begin();
-		Entry prev = *e;
-
-		for (++e; e != chunk.end(); ++e)
-		{
-			if (prev.GetVal() > e->GetVal())
-			{
-				terminatexx("Invalid order when saving");
-			}
-
-		}
-
-
-		FILE* f = fopen(chunk_name.c_str(), "wb");
-		if (binnary)
-		{
-			OutputStream::write(chunk.begin(), chunk.Size(), f);
-		}
-		else
-		{
-			OutputStream::write_text(chunk.begin(), chunk.Size(), f);
-		}
-
-
-		fclose(f);
 	}
 
 	void write_value(bool& first, OutputStream& ch_it, Entry*&sch_it) const
@@ -371,27 +335,12 @@ public:
 		sch_it--;
 	}
 
-
-	Entry* find(Entry* begin, Entry* end) const
-	{
-		auto val = std::find(begin, end, Entry(825801500,13));
-		if(val != end)
-		{
-			printf("je to tu\n");
-		}
-		return val;
-	}
-
 	layer_rec Sort(SubChunk& chunk, num chunk_capacity, SubChunk& buffer) const
 	{
-		const num subchunk_byte_size = 1024llu * 1024llu * 1024llu / 2llu;//512 MB //64 // 4MB
-		//const num subchunk_size = subchunk_byte_size / sizeof(Entry);
-
 		num subchunk_size = chunk_capacity / 24llu;
 		num sub_chunk_count = chunk.size() / subchunk_size + ((chunk.size() % subchunk_size) != 0 ? 1 : 0);
 
 		SubChunk* subchunks = new SubChunk[sub_chunk_count];
-
 		num sum_size = 0;
 		Entry* beg_i = chunk.begin();
 		for (num i = 0; i < sub_chunk_count; ++i, beg_i += subchunk_size)
@@ -399,15 +348,18 @@ public:
 			subchunks[i] = SubChunk(beg_i, std::min(beg_i + subchunk_size, chunk.end()));
 			subchunks[i].sort();
 			sum_size += subchunks[i].size();
-
-
 		}
 
-
+#ifdef time_logs
 		auto ts = std::chrono::steady_clock::now();
+#endif
+
 		auto res = MergeSort(chunk, buffer, subchunks, sub_chunk_count);
+
+#ifdef time_logs
 		auto te = std::chrono::steady_clock::now();
 		logt("Merging phase ", ts, te);
+#endif
 		return res;
 	}
 
@@ -415,36 +367,43 @@ public:
 	bool Create(InputNumberStream& input_file, const std::string &chunk_name, char* memory, num memory_available) override
 	{
 		num fourth_memory = memory_available / 4;
+#ifdef time_logs
 		printf("Creating chunk.\n");
+#endif
 		Chunk buffer(fourth_memory, memory);
 		buffer.Shrink(buffer.Capacity());
 		Chunk chunk(3 * fourth_memory, memory + fourth_memory);
 
+#ifdef time_logs
 		printf("Reading chunk.\n");
 		auto ts = std::chrono::steady_clock::now();
+#endif
 
 		ReadChunk(input_file, chunk);
 		if (chunk.Size() <= 0)
 			return false;
 
+#ifdef time_logs
 		auto te_read = std::chrono::steady_clock::now();
-
 		printf("Sorting chunk.\n");
+#endif
 
 		SubChunk chunk_sb(chunk.begin(), chunk.end());
 		SubChunk buffer_sb(buffer.begin(), buffer.end());
 		auto res = Sort(chunk_sb, chunk.Capacity(), buffer_sb);
 
+#ifdef time_logs
 		auto te_sort = std::chrono::steady_clock::now();
-
 		printf("Saving chunk.\n");
+#endif
 		write_chunks(res.ch1, res.ch2, res.ch3, res.buffer, chunk_name, !(input_file.eof() && chunk_name == "chunk_0_0"));
 
+#ifdef time_logs
 		auto te_save = std::chrono::steady_clock::now();
-
 		logt("Reading chunk in", ts, te_read);
 		logt("Sorting chunk in", te_read, te_sort);
 		logt("Saving chunk in", te_sort, te_save);
+#endif
 		return true;
 	}
 };

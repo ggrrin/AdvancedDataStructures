@@ -2,7 +2,6 @@
 #define output_stream_
 #include "Entry.h"
 #include <stdio.h>
-#include <string>
 
 class InStream
 {

@@ -2,10 +2,8 @@
 #define InputNumberStream_
 
 #include "Types.h"
-#include <string>
 #include <stdio.h>
 #include "Entry.h"
-#include <string.h>
 #include "LogHelp.h"
 
 class InputNumberStream
@@ -71,7 +69,6 @@ class InputNumberStream
 			}
 		}
 
-		//res &= ~0x40000000;
 		return res;
 	}
 

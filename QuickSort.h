@@ -99,10 +99,6 @@ void quick_sort(Entry* start, Entry* end, num log, num layer)
 	if (i == end || i == start)
 	{
 		heap_sort(start, end);
-		//for (Entry* x = start; x != end; x++)
-		//	printf("%llu:", x->GetVal());
-
-		//printf("\n");
 		return;
 	}
 

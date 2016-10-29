@@ -1,7 +1,6 @@
 #ifndef chunk_creator_
 #define chunk_creator_
 
-#include <fstream>
 #include "Types.h"
 
 class InputNumberStream;

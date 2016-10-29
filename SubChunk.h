@@ -17,13 +17,16 @@ public:
 
 	void sort()
 	{
+#ifdef time_logs
 		auto ts = std::chrono::steady_clock::now();
-
+#endif
 		quick_sort(begin_, end_);
 
+#ifdef time_logs
 		auto te_sort = std::chrono::steady_clock::now();
 
 		logt("Subchunk sorted in ", ts, te_sort);
+#endif
 	}
 
 	num size() const
