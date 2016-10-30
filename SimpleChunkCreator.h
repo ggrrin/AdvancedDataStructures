@@ -377,7 +377,7 @@ class SimpleChunkCreator : public ChunkCreator
 	//Sorts data in 16MB blocks by quicksort which are then sorted by merge sort
 	layer_rec Sort(num res_count, SubChunk& chunk, num chunk_capacity, SubChunk& buffer) const
 	{
-		num subchunk_size =  16 * 1024 * 1024;
+		num subchunk_size =   64 * 1024 * 1024;
 		num sub_chunk_count = chunk.size() / subchunk_size + ((chunk.size() % subchunk_size) != 0 ? 1 : 0);
 
 		SubChunk* subchunks = new SubChunk[sub_chunk_count];
