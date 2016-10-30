@@ -1,7 +1,6 @@
 #ifndef simple_chunk_creator_
 #define simple_chunk_creator_
 
-#include <algorithm>
 #include "ChunkCreator.h"
 #include "Chunk.h"
 #include "Entry.h"
@@ -25,6 +24,11 @@ struct layer_rec
 		ch2(ch2p),
 		ch3(ch3p),
 		buffer(bufferp) {};
+
+	bool operator==(const layer_rec& lr)
+	{
+		return ch1 == lr.ch1 && ch2 == lr.ch2 && ch3 == lr.ch3 && buffer == lr.buffer;
+	}
 };
 
 
@@ -42,7 +46,9 @@ public:
 
 	void write_chunks(const SubChunk& sch1, const SubChunk& sch2, const SubChunk& sch3, SubChunk& buffer, const std::string& chunk_name, bool binnary) const
 	{
+#ifdef time_logs
 		printf("Buffer size: %lld MB.\n", buffer.size() * sizeof(Entry) / 1024llu / 1024llu);
+#endif
 
 		OutputStream file(binnary, chunk_name.c_str(), buffer.size() * sizeof(Entry), reinterpret_cast<char*>(buffer.begin()));
 
@@ -363,7 +369,7 @@ public:
 
 	layer_rec Sort(num res_count, SubChunk& chunk, num chunk_capacity, SubChunk& buffer) const
 	{
-		num subchunk_size = chunk_capacity / (3llu*32llu);
+		num subchunk_size =  16 * 1024 * 1024;
 		num sub_chunk_count = chunk.size() / subchunk_size + ((chunk.size() % subchunk_size) != 0 ? 1 : 0);
 
 		SubChunk* subchunks = new SubChunk[sub_chunk_count];
@@ -400,7 +406,7 @@ public:
 			return s2;
 	}
 
-	layer_rec fill_remaining_space(InputNumberStream& input, layer_rec prev_record) const
+	layer_rec fill_remaining_space(InputNumberStream& input, const layer_rec prev_record) const
 	{
 		layer_rec record = prev_record;
 		SubChunk& min_chunk = min(min(record.ch1, record.ch2), record.ch3);
@@ -481,6 +487,7 @@ public:
 		SubChunk buffer_sb(buffer.begin(), buffer.end());
 		auto res = Sort(3, chunk_sb, chunk.Capacity(), buffer_sb);
 
+		
 		res = fill_remaining_space(input_file, res);
 
 #ifdef time_logs

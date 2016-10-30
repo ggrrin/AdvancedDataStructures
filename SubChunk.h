@@ -49,6 +49,12 @@ public:
 		return end_;
 	}
 
+	bool operator==(const SubChunk& sc)
+	{
+		return begin_ == sc.begin_ && end_ == sc.end_;
+
+	}
+
 };
 
 #endif
