@@ -1,4 +1,4 @@
-//#define time_logs
+#define time_logs
 
 #include "ExternalSorter.h"
 #include "SimpleChunkCreator.h"

@@ -18,6 +18,8 @@ struct layer_rec
 	SubChunk ch3;
 	SubChunk buffer;
 
+	layer_rec() = default;
+
 	layer_rec(const SubChunk& ch1p, const SubChunk& ch2p, const SubChunk& ch3p, const SubChunk& bufferp) :
 		ch1(ch1p),
 		ch2(ch2p),
@@ -40,7 +42,7 @@ public:
 
 	void write_chunks(const SubChunk& sch1, const SubChunk& sch2, const SubChunk& sch3, SubChunk& buffer, const std::string& chunk_name, bool binnary) const
 	{
-		printf("Buffer size: %lld MB.\n", buffer.size() * sizeof(Entry) / 1024llu / 1024llu );  
+		printf("Buffer size: %lld MB.\n", buffer.size() * sizeof(Entry) / 1024llu / 1024llu);
 
 		OutputStream file(binnary, chunk_name.c_str(), buffer.size() * sizeof(Entry), reinterpret_cast<char*>(buffer.begin()));
 
@@ -173,12 +175,12 @@ public:
 
 
 
-	layer_rec MergeSort(SubChunk& read, SubChunk& buffer, SubChunk* subchunks, num chunks_count) const
+	layer_rec MergeSort(num res_count, SubChunk& buffer, SubChunk* subchunks, num chunks_count) const
 	{
 #ifdef time_logs
-			printf("before while\n");
+		printf("before while\n");
 #endif
-		while (chunks_count > 3)
+		while (chunks_count > res_count)
 		{
 			num next_subchunks_count = chunks_count / 2 + (chunks_count % 2);
 			SubChunk* next_subchunks = new SubChunk[next_subchunks_count];
@@ -186,11 +188,11 @@ public:
 			for (num i = 0; i < chunks_count; i += 2)
 			{
 #ifdef time_logs
-			printf("Subchunk %lld from %lld\n", i, chunks_count);
+				printf("Subchunk %lld from %lld\n", i, chunks_count);
 #endif
 				Entry* ch_it = buffer.begin();
 				SubChunk& sch1 = subchunks[i];
-				SubChunk*  sch2 = nullptr; 
+				SubChunk*  sch2 = nullptr;
 
 				Entry* sch1_it = sch1.begin();
 				Entry* sch_o_begin = ch_it;
@@ -200,7 +202,7 @@ public:
 				{
 					sch2 = subchunks + i + 1;
 					Entry* sch2_it = sch2->begin();
-					
+
 					while (sch1_it != sch1.end() && sch2_it != sch2->end())
 					{
 						if (sch1_it->GetVal() < sch2_it->GetVal())
@@ -235,18 +237,18 @@ public:
 					set_value(first, ch_it, sch1_it);
 
 				next_subchunks[i / 2] = SubChunk(sch_o_begin, ch_it);
-				buffer = SubChunk(ch_it, sch2 != nullptr ?  sch2->end() : sch1.end());
+				buffer = SubChunk(ch_it, sch2 != nullptr ? sch2->end() : sch1.end());
 			}
 
 			delete[] subchunks;
-			BackwardMerge(buffer, next_subchunks, next_subchunks_count);
+			BackwardMerge(res_count, buffer, next_subchunks, next_subchunks_count);
 			subchunks = next_subchunks;
 			chunks_count = next_subchunks_count;
 
 		}
 
 #ifdef time_logs
-			printf("Done lets get to triple merging bw\n");
+		printf("Done lets get to triple merging bw\n");
 #endif
 		if (chunks_count == 0)
 			terminatexx("No chunk.");
@@ -260,12 +262,12 @@ public:
 	}
 
 
-	void BackwardMerge(SubChunk& buffer, SubChunk*& subchunks, num& chunks_count) const
+	void BackwardMerge(num res_count, SubChunk& buffer, SubChunk*& subchunks, num& chunks_count) const
 	{
 #ifdef time_logs
-			printf("Backward function\n");
+		printf("Backward function\n");
 #endif
-		if (chunks_count < 4)
+		if (chunks_count <= res_count)
 			return;
 
 		num next_subchunks_count = chunks_count / 2 + (chunks_count % 2);
@@ -278,7 +280,7 @@ public:
 #endif
 			Entry* ch_it = buffer.end() - 1;
 			SubChunk& sch1 = subchunks[i];
-			SubChunk* sch2 = nullptr; 
+			SubChunk* sch2 = nullptr;
 
 			Entry* sch1_it = sch1.end() - 1;
 			bool first = true;
@@ -326,11 +328,11 @@ public:
 		}
 
 #ifdef time_logs
-			printf("Delete prev bw\n");
+		printf("Delete prev bw\n");
 #endif
 		delete[] subchunks;
 		subchunks = next_subchunks;
-		
+
 		chunks_count = next_subchunks_count;
 	}
 
@@ -359,9 +361,9 @@ public:
 		sch_it--;
 	}
 
-	layer_rec Sort(SubChunk& chunk, num chunk_capacity, SubChunk& buffer) const
+	layer_rec Sort(num res_count, SubChunk& chunk, num chunk_capacity, SubChunk& buffer) const
 	{
-		num subchunk_size = chunk_capacity / 254llu;//384llu;
+		num subchunk_size = chunk_capacity / 3llu*64llu;
 		num sub_chunk_count = chunk.size() / subchunk_size + ((chunk.size() % subchunk_size) != 0 ? 1 : 0);
 
 		SubChunk* subchunks = new SubChunk[sub_chunk_count];
@@ -373,7 +375,7 @@ public:
 			subchunks[i].sort();
 			sum_size += subchunks[i].size();
 #ifdef time_logs
-			printf("%lld from %lld done\n", i+1,sub_chunk_count);
+			printf("%lld from %lld done\n", i + 1, sub_chunk_count);
 #endif
 		}
 
@@ -381,13 +383,69 @@ public:
 		auto ts = std::chrono::steady_clock::now();
 #endif
 
-		auto res = MergeSort(chunk, buffer, subchunks, sub_chunk_count);
+		auto res = MergeSort(res_count, buffer, subchunks, sub_chunk_count);
 
 #ifdef time_logs
 		auto te = std::chrono::steady_clock::now();
 		logt("Merging phase ", ts, te);
 #endif
 		return res;
+	}
+
+	SubChunk& min(SubChunk& s1, SubChunk& s2) const
+	{
+		if (s2.empty() || (s1.size() < s2.size() && !s1.empty()))
+			return s1;
+		else
+			return s2;
+	}
+
+	layer_rec fill_remaining_space(InputNumberStream input, layer_rec record) const
+	{
+		SubChunk& min_chunk = min(min(record.ch1, record.ch2), record.ch3);
+
+		num a = record.buffer.size();
+		num b = min_chunk.size();
+
+		if (2 * b <= a)
+		{
+			//a. k. a. size of chunk to read
+			num x = (a - 2 * b) / 2; // => so it holds x + b <= a/2 => can do full merge
+
+			Chunk buffer((a - x) * sizeof(Entry), reinterpret_cast<char*>(record.buffer.begin()));
+			buffer.Shrink(buffer.Capacity());
+
+			Chunk chunk(x * sizeof(Entry), reinterpret_cast<char*>(record.buffer.end() - x));
+			ReadChunk(input, chunk);
+
+			SubChunk chunk_sb(chunk.begin(), chunk.end());
+			SubChunk buffer_sb(buffer.begin(), buffer.end());
+			auto res = Sort(1, chunk_sb, chunk.Capacity(), buffer_sb);
+
+			num ccc = 2;
+			SubChunk* sbs = new SubChunk[ccc];
+			sbs[0] = res.ch1;
+			sbs[1] = min_chunk;
+
+			
+			if (sbs[0].begin() < res.buffer.begin())
+			{
+				BackwardMerge(1, res.buffer, sbs, ccc);
+				min_chunk = sbs[0];
+				//record.buffer = res.buffer; is set from backwardmerge
+			}
+			else
+			{
+				layer_rec r = MergeSort(1, res.buffer, sbs, ccc);
+				min_chunk = r.ch1;
+				record.buffer = r.buffer;
+			}
+			return record;
+		}
+		else
+		{
+			return record;
+		}
 	}
 
 
@@ -417,7 +475,9 @@ public:
 
 		SubChunk chunk_sb(chunk.begin(), chunk.end());
 		SubChunk buffer_sb(buffer.begin(), buffer.end());
-		auto res = Sort(chunk_sb, chunk.Capacity(), buffer_sb);
+		auto res = Sort(3, chunk_sb, chunk.Capacity(), buffer_sb);
+
+		res = fill_remaining_space(input_file, res);
 
 #ifdef time_logs
 		auto te_sort = std::chrono::steady_clock::now();
@@ -432,7 +492,7 @@ public:
 		logt("Saving chunk in", te_sort, te_save);
 #endif
 		return true;
-	}
+}
 };
 
 #endif

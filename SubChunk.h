@@ -29,6 +29,11 @@ public:
 #endif
 	}
 
+	bool empty() const
+	{
+		return end_ == begin_;
+	}
+
 	num size() const
 	{
 		return end_ - begin_;
