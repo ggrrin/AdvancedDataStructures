@@ -400,7 +400,7 @@ public:
 			return s2;
 	}
 
-	layer_rec fill_remaining_space(InputNumberStream input, layer_rec prev_record) const
+	layer_rec fill_remaining_space(InputNumberStream& input, layer_rec prev_record) const
 	{
 		layer_rec record = prev_record;
 		SubChunk& min_chunk = min(min(record.ch1, record.ch2), record.ch3);
@@ -408,7 +408,7 @@ public:
 		num a = record.buffer.size();
 		num b = min_chunk.size();
 
-		if (2 * b <= a)
+		if (2 * b < a)
 		{
 			//a. k. a. size of chunk to read
 			num x = (a - 2 * b) / 2; // => so it holds x + b <= a/2 => can do full merge
@@ -418,6 +418,9 @@ public:
 
 			Chunk chunk(x * sizeof(Entry), reinterpret_cast<char*>(record.buffer.end() - x));
 			ReadChunk(input, chunk);
+
+			if (chunk.Size() == 0)
+				return prev_record;
 
 			SubChunk chunk_sb(chunk.begin(), chunk.end());
 			SubChunk buffer_sb(buffer.begin(), buffer.end());

@@ -1,4 +1,4 @@
-#ifndef InputNumberStream_record
+#ifndef InputNumberStream_
 #define InputNumberStream_
 
 #include "Types.h"
