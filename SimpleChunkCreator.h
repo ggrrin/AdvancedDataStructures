@@ -363,7 +363,7 @@ public:
 
 	layer_rec Sort(num res_count, SubChunk& chunk, num chunk_capacity, SubChunk& buffer) const
 	{
-		num subchunk_size = chunk_capacity / 3llu*64llu;
+		num subchunk_size = chunk_capacity / (3llu*32llu);
 		num sub_chunk_count = chunk.size() / subchunk_size + ((chunk.size() % subchunk_size) != 0 ? 1 : 0);
 
 		SubChunk* subchunks = new SubChunk[sub_chunk_count];
@@ -400,8 +400,9 @@ public:
 			return s2;
 	}
 
-	layer_rec fill_remaining_space(InputNumberStream input, layer_rec record) const
+	layer_rec fill_remaining_space(InputNumberStream input, layer_rec prev_record) const
 	{
+		layer_rec record = prev_record;
 		SubChunk& min_chunk = min(min(record.ch1, record.ch2), record.ch3);
 
 		num a = record.buffer.size();
@@ -432,13 +433,13 @@ public:
 			{
 				BackwardMerge(1, res.buffer, sbs, ccc);
 				min_chunk = sbs[0];
-				//record.buffer = res.buffer; is set from backwardmerge
+				record.buffer = SubChunk(prev_record.buffer.begin(), res.buffer.end());
 			}
 			else
 			{
 				layer_rec r = MergeSort(1, res.buffer, sbs, ccc);
 				min_chunk = r.ch1;
-				record.buffer = r.buffer;
+				record.buffer = SubChunk(r.ch1.end(), prev_record.buffer.end());
 			}
 			return record;
 		}

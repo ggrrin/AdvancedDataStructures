@@ -70,7 +70,10 @@ void quick_sort(Entry* start, Entry* end, num log, num layer)
 		return;
 
 	if (layer > 2 * log)
+	{
 		heap_sort(start, end);
+		return;
+	}
 
 	num a = start->GetVal();
 	num b = (end - 1)->GetVal();
