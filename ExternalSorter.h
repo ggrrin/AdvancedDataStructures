@@ -20,13 +20,10 @@ class ExternalSorter
 	std::unique_ptr<ChunkCreator> chunkCreator;
 	const num gigabyte = 1024llu * 1024llu * 1024llu;
 	const num memory_available = 8llu * gigabyte - 8 * 1024;
-	//const num memory_available = 16llu * 1024llu * 1024llu; ///15 strangly crash in relesase
 	char* memory;
 
-public:
-	ExternalSorter(const std::string& filename_p, std::unique_ptr<ChunkCreator> chunkCreator_p)
-		: filename(filename_p), chunkCreator(std::move(chunkCreator_p)) {};
 
+	//creates set of files with sorted chunks
 	num CreateSortedChunks(InputNumberStream& input_file, char* memory) const
 	{
 		num chunk_index = 0;
@@ -41,6 +38,7 @@ public:
 		return chunk_index;
 	}
 
+	//write on unique value to output stream
 	void set_value(bool& first, OutputStream& ch_it, InStream& input) const
 	{
 		const Entry& sch_it = input.read();
@@ -78,6 +76,7 @@ public:
 		}
 	}
 
+	//merge two ordered input stream to one output stream
 	void MergeSort(num chunks_count, num layer) const
 	{
 		while (chunks_count > 1)
@@ -168,6 +167,11 @@ public:
 		rename(res.c_str(), "data.out");
 	}
 
+public:
+	ExternalSorter(const std::string& filename_p, std::unique_ptr<ChunkCreator> chunkCreator_p)
+		: filename(filename_p), chunkCreator(std::move(chunkCreator_p)) {};
+
+	//sorts file
 	void Sort()
 	{
 #ifdef time_logs

@@ -34,8 +34,8 @@ struct layer_rec
 
 class SimpleChunkCreator : public ChunkCreator
 {
-public:
 
+	//reads values to memory
 	void ReadChunk(InputNumberStream& input_file, Chunk& chunk) const
 	{
 		Entry e;
@@ -44,6 +44,7 @@ public:
 	}
 
 
+	//merge 3 sorted buffers to output stream
 	void write_chunks(const SubChunk& sch1, const SubChunk& sch2, const SubChunk& sch3, SubChunk& buffer, const std::string& chunk_name, bool binnary) const
 	{
 #ifdef time_logs
@@ -84,6 +85,7 @@ public:
 		file.close();
 	}
 
+	//write or unique value output stream
 	void write_value(bool& first, OutputStream& ch_it, Entry*&sch_it) const
 	{
 		if (first)
@@ -107,6 +109,7 @@ public:
 		sch_it++;
 	}
 
+	//merge two sequence to output stream 
 	void merge2(bool& first, OutputStream& ch_it, Entry*&sch1_it, Entry*&sch2_it, const SubChunk& sch1, const SubChunk& sch2) const
 	{
 		while (sch1_it != sch1.end() && sch2_it != sch2.end())
@@ -137,6 +140,7 @@ public:
 	}
 
 
+	//sorts array of 3 elements
 	void trivial_sort(Entry** start[]) const
 	{
 		Entry*** a = &start[0];
@@ -154,7 +158,7 @@ public:
 
 
 
-
+	//add or unique value to chunk 
 	void set_value(bool& first, Entry*& ch_it, Entry*&sch_it) const
 	{
 		if (first)
@@ -181,6 +185,7 @@ public:
 
 
 
+	//merge layer from begin to end ( buffer is initialy at begin and moves to end)
 	layer_rec MergeSort(num res_count, SubChunk& buffer, SubChunk* subchunks, num chunks_count) const
 	{
 #ifdef time_logs
@@ -268,6 +273,7 @@ public:
 	}
 
 
+	//Merge chunks from end to begin (buffer is intialiat the end and moves to begin)
 	void BackwardMerge(num res_count, SubChunk& buffer, SubChunk*& subchunks, num& chunks_count) const
 	{
 #ifdef time_logs
@@ -343,6 +349,7 @@ public:
 	}
 
 
+	//add value ( and unique) to buffer created by merging two others
 	void set_value_max(bool& first, Entry*& ch_it, Entry*&sch_it) const
 	{
 		if (first)
@@ -367,6 +374,7 @@ public:
 		sch_it--;
 	}
 
+	//Sorts data in 16MB blocks by quicksort which are then sorted by merge sort
 	layer_rec Sort(num res_count, SubChunk& chunk, num chunk_capacity, SubChunk& buffer) const
 	{
 		num subchunk_size =  16 * 1024 * 1024;
@@ -398,6 +406,7 @@ public:
 		return res;
 	}
 
+	//returns reference to smalles chunk
 	SubChunk& min(SubChunk& s1, SubChunk& s2) const
 	{
 		if (s2.empty() || (s1.size() < s2.size() && !s1.empty()))
@@ -406,6 +415,7 @@ public:
 			return s2;
 	}
 
+	//fills free memory which came from uniqeuing sorted chunk
 	layer_rec fill_remaining_space(InputNumberStream& input, const layer_rec prev_record) const
 	{
 		layer_rec record = prev_record;
@@ -459,6 +469,8 @@ public:
 	}
 
 
+public:
+	//creates sorted chunk up to size 3/4 of available memory, which is then saved to the file
 	bool Create(InputNumberStream& input_file, const std::string &chunk_name, char* memory, num memory_available) override
 	{
 		num fourth_memory = memory_available / 4;
