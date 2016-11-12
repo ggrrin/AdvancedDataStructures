@@ -7,7 +7,6 @@
 #include <queue>
 #include <vector>
 #include <tuple>
-#include <cmath>
 
 template<typename TKey, typename TVal>
 class Node
@@ -23,6 +22,12 @@ public:
 		left(nullptr),
 		right(nullptr)
 	{ };
+
+	~Node()
+	{
+		delete left;
+		delete right;
+	}
 
 
 	TKey key;
@@ -42,6 +47,7 @@ protected:
 	typedef typename Node<TKey, TVal>::NodeT NodeT;
 
 	Node_ptr root = nullptr;
+	std::int32_t find_steps = 0;
 
 	void Zig(Node_ptr x)
 	{
@@ -117,13 +123,16 @@ protected:
 		}
 	};
 
-	Node_ptr find_closest(const TKey& key)
+
+
+	Node_ptr find_closest(const TKey& key, int32_t& find_steps)
 	{
 		Node_ptr last_ptr = nullptr;
 		Node_ptr ptr = root;
 
 		while (ptr != nullptr && ptr->key != key)
 		{
+			find_steps++;
 			last_ptr = ptr;
 			if (key < ptr->key)
 				ptr = ptr->left;
@@ -140,22 +149,33 @@ protected:
 	};
 
 public:
-
-	void splay(const TKey& key);
-
-	const TVal& find(const TKey& key)
+	SplayTree() {};
+	virtual ~SplayTree()
 	{
-		Node_ptr closest = find_closest(key);
+		delete root;
+	}
+
+	const TVal* find(const TKey& key)
+	{
+
+
+		Node_ptr closest = find_closest(key, find_steps);
 		if (closest->key == key)
-			return closest->value;
+			return &closest->value;
 		else
 			return nullptr;
+	}
+
+	int32_t  get_total_steps() const
+	{
+		return find_steps;
 	}
 
 	void insert(const TKey& key)
 	{
 		dump("before insert" + std::to_string(key));
-		Node_ptr closest = find_closest(key);
+		int32_t dummySteps = 0;
+		Node_ptr closest = find_closest(key, dummySteps);
 		Node_ptr insertNode = new NodeT(key);
 
 		if (closest == nullptr)
@@ -285,7 +305,7 @@ public:
 		f.close();
 	}
 
-	void write_spaces(std::ofstream& f, float spaces)
+	void write_spaces(std::ofstream& f, float spaces) const
 	{
 		for (int j = 0; j < spaces; ++j)
 		{
@@ -295,15 +315,17 @@ public:
 	}
 };
 
-template<typename TKey,typename Tval>
-class NaiveSplayTree : public SplayTree<TKey,Tval>
+template<typename TKey, typename Tval>
+class NaiveSplayTree : public SplayTree<TKey, Tval>
 {
 protected:
-	virtual void ZigZig(typename SplayTree<TKey,Tval>::Node_ptr x) override
+	virtual void ZigZig(typename SplayTree<TKey, Tval>::Node_ptr x) override
 	{
 		ZigZag(x);
 	}
-	
+
+public:
+	virtual ~NaiveSplayTree() {};
 };
 
 #endif
