@@ -56,6 +56,7 @@ void test(std::string in)
 
 	while (!i.eof() && !i.fail())
 	{
+		std::getline(i, line);
 		auto value = parse_num(line.substr(2).c_str());
 
 		switch (line[0])
