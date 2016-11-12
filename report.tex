@@ -1,0 +1,53 @@
+﻿\documentclass{article}
+% Přepneme na českou sazbu
+\usepackage[czech]{babel}
+\usepackage[IL2]{fontenc}
+
+
+%% Použité kódování znaků: obvykle latin2, cp1250 nebo utf8:
+\usepackage[utf8]{inputenc}
+\begin{document}
+
+
+\section*{Načítání vstupních dat}
+O načtení a rozparsování dat se stará třída $InputNumberStream$, která používá C-čkové streamy.
+Vstup je čten do bufferu, kde je pak rozparsován pomocí Hornerova schematu. S řetězci je pracováno
+přímo v buffer pomocí $char*$ pointerů. Rozparsovana položka se potom uloží do struktory $Entry$, která 
+má 32-bitovou položku pro číslo řádko a 64 bitovou položku pro číslo. U této struktury je nastaveno, 
+aby ji překladač nezarovával a měla tak 12 B. Tyto položky jsou načteny do bufferu, který reprezentuje 
+třída $Chunk$. 
+
+
+\section*{Třídění}
+Třídění probíhá tak, že se vytvoří až 6 GB velké chunky, které jsou vnitřně stříděny a pak mergeovány 
+vnějším tříděním, které reprezentuje třída ExternalSorter.  Na počátku se nalokuje 8 GB buffer, který se pak rozděluje dalším strukturám, 
+tak aby nedocházelo zbytečně k alokaci a dealokaci. 6GB z tohoto bufferu je vyuzito na ulozeni 
+načtených položek, zbylé 2 GB jsou pak použity jako buffery při třídění. 
+
+O vnitřní třídění se stará 
+třída $SimpleChunkCreator$, která načte data do 6 GB bufferu. Tento buffer je setříděn po 64 MB blocích,
+reprezentovaných třídu $SubChunk$, pomocí hybridního třídění. 
+
+Hybridní je třídění realizované quicksortem,
+který pro délku meně než 13 prvků volá insert sort. Pro tři a dva prvky je sekevence setříděná triviálně
+podmínkami. Pokud quick sort dojde do 2xkrát lograritmické hloubky, nebo není nalezen efektivní pivot
+je zavolán heapsort. Pivot se volí jako průměr prvního a posledního prvku sekvence. 
+
+Bloky jsou pak mergeovany "pohybem" bufferu tam a zpět, dokud nevzniknou tři setříděné posloupnosti, které
+ty jsou slity přímo do souboru. Při mergeovaní probíhá rovněž odstraňování duplicit, tím může dojít
+ke značnému zmenšní dat v buffer. Proto je proveden pokus o doplnění tohoto bufferu. Je možné donačíst
+buffer o velikosti $x$ tak, aby mohl proběhnout další mergeovaní, pro které je třeba buffer. 
+
+$$ x \le (a - 2*b)/2 $$
+
+kde $a$ je velikost volného bufferu po odstranění duplicit a $b$ je velikost nejmenšího setříděné posloupnosti.
+Načtená data velikosti $x$ jsou poté setříděna obdobný způsobem, nicméně celá do jedné sekvence. Tato sekvence
+je pak spojená s nejmenší setříděnou posloupností $b$. Tím nám vzniknou opět tři setříděné sekvence, které
+mohou mergeovany přímo do souboru.
+
+Až na poslední vrstvu jsou data do souboru ukládána respektivě čtena binárně pomocí tříd $InStream$ a $OutputStream$.
+
+\end{document}
+
+
+
