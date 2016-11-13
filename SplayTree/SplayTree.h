@@ -1,45 +1,16 @@
 #ifndef splay_tree_
 #define splay_tree_
 
+#include "Node.h"
 #include <cstdint>
 #include <string>
 #include <fstream>
-#include <queue>
-#include <vector>
 #include <tuple>
 
-template<typename TKey, typename TVal>
-class Node
-{
-public:
-	typedef Node<TKey, TVal>* Node_ptr;
-	typedef Node<TKey, TVal> NodeT;
-
-	explicit Node(const TKey& key_p) :
-		key(key_p),
-		value(TVal()),
-		parent(nullptr),
-		left(nullptr),
-		right(nullptr)
-	{ };
-
-	~Node()
-	{
-		if(left != nullptr)
-			delete left;
-
-		if(right != nullptr)
-			delete right;
-	}
-
-
-	TKey key;
-	TVal value;
-
-	Node_ptr parent;
-	Node_ptr left;
-	Node_ptr right;
-};
+#ifdef DEBUG_TREE
+#include <queue>
+#include <vector>
+#endif
 
 
 template<typename TKey, typename TVal>
@@ -53,6 +24,7 @@ protected:
 	std::int32_t find_steps = 0;
 	std::int32_t find_count = 0;
 
+	//implementation of zig step, rotation is determined from grand parent 
 	void Zig(Node_ptr x)
 	{
 		Node_ptr parent = x->parent;
@@ -96,6 +68,7 @@ protected:
 		dump("zigging");
 	}
 
+	//implementation of zig zig step
 	virtual void ZigZig(Node_ptr x)
 	{
 		Node_ptr parent = x->parent;
@@ -103,12 +76,14 @@ protected:
 		Zig(x);
 	};
 
+	//implementation of zig zag step
 	void ZigZag(Node_ptr x)
 	{
 		Zig(x);
 		Zig(x);
 	};
 
+	//implementation of splay 
 	void splay(Node_ptr x)
 	{
 		while (x->parent != nullptr)
@@ -127,8 +102,7 @@ protected:
 		}
 	};
 
-
-
+	//finds node with closest key or returns nullptr
 	Node_ptr find_closest(const TKey& key, int32_t& find_steps)
 	{
 		Node_ptr last_ptr = nullptr;
@@ -160,9 +134,10 @@ public:
 			delete root;
 	}
 
+	//finds value associated with key and splay its node
+	//if no such a key found nullptr is returned
 	const TVal* find(const TKey& key)
 	{
-
 		find_count++;
 
 		Node_ptr closest = find_closest(key, find_steps);
@@ -177,16 +152,19 @@ public:
 		}
 	}
 
+	//gets number of find calls
 	int32_t get_find_count() const
 	{
 		return find_count;
 	}
 
+	//gets total number of steps between nodes in find procedure
 	int32_t  get_total_steps() const
 	{
 		return find_steps;
 	}
 
+	//create node with specific key
 	void insert(const TKey& key)
 	{
 		dump("before insert" + std::to_string(key));
@@ -199,7 +177,6 @@ public:
 		else
 		{
 			splay(closest);
-			//dump("after splay");
 
 			if (key < closest->key)
 			{
@@ -229,12 +206,14 @@ public:
 	};
 
 
+#ifdef DEBUG_TREE
 	int s = 1;
+#endif
 
+	//dump entire tree into readable text file
 	void dump(std::string message)
 	{
-		return;
-
+#ifdef DEBUG_TREE
 		std::ofstream f("log/" + std::to_string(s++) + ".log", std::ios_base::out | std::ios_base::trunc);
 		f << message << std::endl;
 
@@ -319,8 +298,11 @@ public:
 		}
 
 		f.close();
+#endif
 	}
 
+#ifdef DEBUG_TREE
+	//writs spaces spaces to stream f
 	void write_spaces(std::ofstream& f, float spaces) const
 	{
 		for (int j = 0; j < spaces; ++j)
@@ -329,19 +311,8 @@ public:
 
 		}
 	}
-};
+#endif
 
-template<typename TKey, typename Tval>
-class NaiveSplayTree : public SplayTree<TKey, Tval>
-{
-protected:
-	virtual void ZigZig(typename SplayTree<TKey, Tval>::Node_ptr x) override
-	{
-		SplayTree<TKey, Tval>::ZigZag(x);
-	}
-
-public:
-	virtual ~NaiveSplayTree() {};
 };
 
 #endif

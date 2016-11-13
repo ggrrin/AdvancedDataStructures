@@ -1,16 +1,20 @@
+//#define NAIVE
+//#define DEBUG_TREE 
 
 #include "SplayTree.h"
+#include "NaiveSplayTree.h"
 #include <random>
 
-//#define NAIVE
 
 
+//empty type for tree value
 struct Dummy
 {
 
 };
 
 
+//parses string to int32
 int32_t parse_num(const char* str)
 {
 	bool overflow = false;
@@ -38,6 +42,7 @@ int32_t parse_num(const char* str)
 	return res;
 }
 
+//writes one point of the graph to output file and deletes tree
 void log(SplayTree<int32_t, Dummy>* tree, int size, std::ofstream& o)
 {
 	if (tree != nullptr)
@@ -47,6 +52,7 @@ void log(SplayTree<int32_t, Dummy>* tree, int size, std::ofstream& o)
 	}
 }
 
+//run test specified by input file
 void test(std::string in)
 {
 	std::ifstream i(in + ".in", std::ifstream::in);
@@ -101,17 +107,4 @@ int main(int argc, char* argv[])
 		test(argv[1]);
 	else
 		printf("Accepts one parameter as input file name with sufix .in which mustn't be specified.\n Output is written to filename with the same name but .out insead of .in\n");
-
-	//std::default_random_engine generator(5);
-	//std::uniform_int_distribution<int> distribution(1, 4000000);
-
-
-	//SplayTree<std::int32_t, Dummy> sp;
-	////NaiveSplayTree<std::int32_t,Dummy> sp;
-
-	//for (int i = 0; i < 100000; ++i)
-	//{
-	//	sp.insert(distribution(generator));
-	//}
-
 }
