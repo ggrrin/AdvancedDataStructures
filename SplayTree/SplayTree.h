@@ -25,8 +25,11 @@ public:
 
 	~Node()
 	{
-		delete left;
-		delete right;
+		if(left != nullptr)
+			delete left;
+
+		if(right != nullptr)
+			delete right;
 	}
 
 
@@ -48,6 +51,7 @@ protected:
 
 	Node_ptr root = nullptr;
 	std::int32_t find_steps = 0;
+	std::int32_t find_count = 0;
 
 	void Zig(Node_ptr x)
 	{
@@ -152,18 +156,30 @@ public:
 	SplayTree() {};
 	virtual ~SplayTree()
 	{
-		delete root;
+		if(root != nullptr)
+			delete root;
 	}
 
 	const TVal* find(const TKey& key)
 	{
 
+		find_count++;
 
 		Node_ptr closest = find_closest(key, find_steps);
-		if (closest->key == key)
+		if (closest != nullptr && closest->key == key)
+		{
+			splay(closest);
 			return &closest->value;
+		}
 		else
+		{
 			return nullptr;
+		}
+	}
+
+	int32_t get_find_count() const
+	{
+		return find_count;
 	}
 
 	int32_t  get_total_steps() const
@@ -321,7 +337,7 @@ class NaiveSplayTree : public SplayTree<TKey, Tval>
 protected:
 	virtual void ZigZig(typename SplayTree<TKey, Tval>::Node_ptr x) override
 	{
-		ZigZag(x);
+		SplayTree<TKey, Tval>::ZigZag(x);
 	}
 
 public:

@@ -2,6 +2,8 @@
 #include "SplayTree.h"
 #include <random>
 
+//#define NAIVE
+
 
 struct Dummy
 {
@@ -40,7 +42,7 @@ void log(SplayTree<int32_t, Dummy>* tree, int size, std::ofstream& o)
 {
 	if (tree != nullptr)
 	{
-		o << tree->get_total_steps() / size << std::endl;
+		o << size << " " << (double)((double)tree->get_total_steps() / (double)tree->get_find_count()) << std::endl;
 		delete tree;
 	}
 }
@@ -48,7 +50,11 @@ void log(SplayTree<int32_t, Dummy>* tree, int size, std::ofstream& o)
 void test(std::string in)
 {
 	std::ifstream i(in + ".in", std::ifstream::in);
+#ifdef NAIVE
+	std::ofstream o(in + "N.out", std::ofstream::out | std::ofstream::trunc);
+#else
 	std::ofstream o(in + ".out", std::ofstream::out | std::ofstream::trunc);
+#endif
 
 	std::string line;
 	SplayTree<int32_t, Dummy>* tree = nullptr;
@@ -57,13 +63,20 @@ void test(std::string in)
 	while (!i.eof() && !i.fail())
 	{
 		std::getline(i, line);
+		if(line.size()  <= 1)
+			break;
+
 		auto value = parse_num(line.substr(2).c_str());
 
 		switch (line[0])
 		{
-		case 'N':
+		case '#':
 			log(tree, size, o);
+#ifdef NAIVE
+			tree = new NaiveSplayTree<int32_t, Dummy>();
+#else
 			tree = new SplayTree<int32_t, Dummy>();
+#endif
 			size = value;
 			break;
 		case 'I':
@@ -74,8 +87,9 @@ void test(std::string in)
 			break;
 		}
 
-		log(tree, size, o);
 	}
+
+	log(tree, size, o);
 
 	i.close();
 	o.close();
@@ -83,7 +97,10 @@ void test(std::string in)
 
 int main(int argc, char* argv[])
 {
-	test(argv[1]);
+	if(argc == 2)
+		test(argv[1]);
+	else
+		printf("Accepts one parameter as input file name with sufix .in which mustn't be specified.\n Output is written to filename with the same name but .out insead of .in\n");
 
 	//std::default_random_engine generator(5);
 	//std::uniform_int_distribution<int> distribution(1, 4000000);
