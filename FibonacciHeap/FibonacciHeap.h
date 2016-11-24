@@ -98,6 +98,10 @@ class FibonacciHeap
 
 
 public:
+	virtual ~FibonacciHeap()
+	{
+	}
+
 	FibonacciHeap() :
 		binomialTrees(),
 		treeWithMin(nullptr),
