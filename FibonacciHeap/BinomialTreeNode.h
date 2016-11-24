@@ -1,0 +1,67 @@
+#ifndef binomial_tree_node_
+#define binomial_tree_node_
+
+#include "DoubleLinkedList.h"
+
+template<typename TKey, typename TValue>
+class BinomialTreeNode
+{
+	typedef BinomialTreeNode<TKey, TValue> self_t;
+
+	//prvek (key a value)
+	TKey key;
+	TValue value;
+
+	DoubleLinkedList<self_t*>* sons;
+
+public:
+
+	const TKey& get_key() const
+	{
+		return key;
+	}
+
+	const TValue& get_value() const
+	{
+		return value;
+	}
+
+	//otec
+	self_t* parent;
+
+	//levy a pravy bratr
+	//self_t* leftBrother;
+	//self_t* rightBrother;
+
+	//rad podstromu
+	TKey sub_tree_order;
+
+
+	DoubleLinkedList<self_t*>& get_sons() const
+	{
+		return *sons;
+	}
+
+	DoubleLinkedList<self_t*>* take_sons_ownership()
+	{
+		DoubleLinkedList<self_t*>* res = sons;
+		sons = nullptr;
+		return res;
+	}
+
+	BinomialTreeNode(const TKey& key_p, const TValue& val_p) :
+		key(key_p),
+		value(val_p),
+		parent(nullptr),
+		sons(new DoubleLinkedList<self_t*>()),
+		sub_tree_order(0)
+	{};
+
+	virtual ~BinomialTreeNode()
+	{
+		if (sons != nullptr)
+			delete sons;
+	}
+};
+
+#endif
