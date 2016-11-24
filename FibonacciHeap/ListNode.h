@@ -1,6 +1,8 @@
 #ifndef list_node_
 #define list_node_
 
+#include <cstdint>
+
 template<typename TValue>
 class ListNode
 {

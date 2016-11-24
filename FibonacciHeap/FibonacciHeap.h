@@ -23,7 +23,7 @@ class FibonacciHeap
 	//udrzuje ukazatel na strom s minimem
 	ListNode<sub_tree_root*>* treeWithMin;
 
-	int size;
+	std::int32_t size;
 
 	sub_tree_root* join_binomial_sub_heaps(sub_tree_root* first, sub_tree_root* second)
 	{
@@ -54,10 +54,10 @@ class FibonacciHeap
 			return;
 		}
 
-		size_t orders = 1 + static_cast<size_t>(ceil(log2(get_size())));
+		auto orders = 1 + static_cast<std::int32_t>(ceil(log2(get_size())));
 		sub_tree_root** roots = new sub_tree_root*[orders];
 
-		for (size_t i = 0; i < orders; i++)
+		for (std::int32_t i = 0; i < orders; i++)
 			roots[i] = nullptr;
 
 		for (auto current = binomialTrees.begin();
@@ -65,7 +65,7 @@ class FibonacciHeap
 			current = ++*current)
 		{
 			sub_tree_root* h = **current;
-			int cur_order = h->sub_tree_order;
+			std::int32_t cur_order = h->sub_tree_order;
 
 			while (roots[cur_order] != nullptr)
 			{
@@ -79,7 +79,7 @@ class FibonacciHeap
 
 		binomialTrees.clear_all(true);
 
-		for (size_t i = 0; i < orders; i++)
+		for (std::int32_t i = 0; i < orders; i++)
 		{
 			if(roots[i] != nullptr)
 			{
@@ -108,7 +108,7 @@ public:
 		size(0)
 	{}
 
-	int get_size() const
+	std::int32_t get_size() const
 	{
 		return size;
 	};
