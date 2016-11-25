@@ -3,6 +3,7 @@ Release/
 bin/
 obj/
 log/
+*.out
 data*.txt
 *chunk_*
 data*.out

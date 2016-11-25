@@ -15,6 +15,7 @@ class BinomialTreeNode
 	DoubleLinkedList<self_t*>* sons;
 
 public:
+	bool lostSon = false;
 
 	const TKey& get_key() const
 	{

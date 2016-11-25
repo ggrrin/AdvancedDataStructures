@@ -69,6 +69,7 @@ class FibonacciHeap
 
 			while (roots[cur_order] != nullptr)
 			{
+				steps++;
 				h = join_binomial_sub_heaps(h, roots[cur_order]);
 				roots[cur_order] = nullptr;
 				cur_order++;
@@ -95,6 +96,8 @@ class FibonacciHeap
 		delete[] roots;
 	}
 
+	std::int32_t deletes;
+	std::int32_t steps;
 
 
 public:
@@ -107,6 +110,11 @@ public:
 		treeWithMin(nullptr),
 		size(0)
 	{}
+
+	double get_average_delete_step_count() const
+	{
+		return static_cast<double>(deletes) / static_cast<double>(steps);
+	}
 
 	std::int32_t get_size() const
 	{
@@ -136,12 +144,16 @@ public:
 	{
 		if (treeWithMin != nullptr)
 		{
+			deletes++;
+
 			auto* sons = (*treeWithMin)->take_sons_ownership();
 			//delete treeWithMin;
 			binomialTrees.remove(treeWithMin);
 			treeWithMin = nullptr;
 
 			size--;
+
+			steps++;
 
 			binomialTrees.MergeWithAndDestroy(sons);
 			reconstruct_heap();
@@ -150,6 +162,7 @@ public:
 
 	virtual void decrease_key(const TKey& key, const TKey& newKey)
 	{
+
 		
 	};
 };
