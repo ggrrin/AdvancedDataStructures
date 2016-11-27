@@ -2,6 +2,7 @@
 #define binomial_tree_node_
 
 #include "DoubleLinkedList.h"
+#include <string>
 
 template<typename TKey, typename TValue>
 class BinomialTreeNode
@@ -14,12 +15,41 @@ class BinomialTreeNode
 
 	DoubleLinkedList<self_t*>* sons;
 
-public:
 	bool lostSon = false;
+
+	
+public:
+
+	
+
+
+
+	bool get_lost_son() const
+	{
+		return lostSon;
+	}
+
+	void reset_lost_son()
+	{
+		lostSon = false;
+	}
+	
+	void set_lost_son()
+	{
+		if (lostSon)
+			throw "Already lost son!";
+
+		lostSon = true;
+	}
 
 	const TKey& get_key() const
 	{
 		return key;
+	}
+
+	void set_key(const TKey& new_key)
+	{
+		key = new_key;
 	}
 
 	const TValue& get_value() const
@@ -28,7 +58,7 @@ public:
 	}
 
 	//otec
-	self_t* parent;
+	ListNode<self_t*>* parent;
 
 	//levy a pravy bratr
 	//self_t* leftBrother;
@@ -45,6 +75,13 @@ public:
 
 	DoubleLinkedList<self_t*>* take_sons_ownership()
 	{
+		auto* it = sons->get_first();
+		while (it != nullptr)
+		{
+			it->value->parent = nullptr;
+			it = it->next;
+		}
+
 		DoubleLinkedList<self_t*>* res = sons;
 		sons = nullptr;
 		return res;

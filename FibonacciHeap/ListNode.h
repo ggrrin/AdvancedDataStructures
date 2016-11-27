@@ -2,6 +2,7 @@
 #define list_node_
 
 #include <cstdint>
+#include <string>
 
 template<typename TValue>
 class ListNode
@@ -18,25 +19,42 @@ public:
 
 	virtual ~ListNode()
 	{
-		if(value != nullptr)
+		if (value != nullptr)
 			delete value;
 	}
 
-	ListNode<TValue>* operator++() const
+	void null_list()
 	{
-		return next;
+		next = nullptr;
+		previous = nullptr;
 	}
 
-	TValue operator*() const
-	{
-		return value;
-	}
 
-	TValue operator->() const
-	{
-		return  value;
-	}
+	std::string dump_s;
 
+	std::string dump()
+	{
+
+		dump_s = "[";
+		dump_s += std::to_string(value->get_key());
+		dump_s += "]";
+
+		if (!value->get_sons().empty())
+		{
+			dump_s += "(";
+
+			auto* it = value->get_sons().begin();
+			while (it != nullptr)
+			{
+				dump_s += it->dump();
+				it = it->next;
+			}
+
+			dump_s += ")";
+		}
+
+		return dump_s;
+	}
 };
 
 #endif

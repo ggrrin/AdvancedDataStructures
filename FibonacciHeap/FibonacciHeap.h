@@ -15,36 +15,38 @@ class FibonacciHeap
 	//odstraneni korene vznikne binom hlada v O 1
 
 	typedef BinomialTreeNode<TKey, TValue> node_t;
-	typedef node_t sub_tree_root;
+	typedef ListNode<node_t*> sub_tree_root;
 
 	//mnozina binomialnich stromu
-	DoubleLinkedList<sub_tree_root*> binomialTrees;
+	DoubleLinkedList<node_t*> binomialTrees;
 
 	//udrzuje ukazatel na strom s minimem
-	ListNode<sub_tree_root*>* treeWithMin;
+	sub_tree_root* treeWithMin;
 
 	std::int32_t size;
 
-	sub_tree_root* join_binomial_sub_heaps(sub_tree_root* first, sub_tree_root* second)
+	sub_tree_root* join_binomial_sub_heaps(sub_tree_root* first_node, sub_tree_root* second_node)
 	{
+		if (first_node->value->get_key() > second_node->value->get_key())
+		{
+			auto* temp = second_node;
+			second_node = first_node;
+			first_node = temp;
+		}
+
+		auto* first = first_node->value;
+		auto* second = second_node->value;
+
 		if (first->sub_tree_order != second->sub_tree_order)
 			throw "Orders does not fit.";
 
-		if (first->get_key() > second->get_key())
-		{
-			auto* temp = second;
-			second = first;
-			first = temp;
-		}
-
-		first->get_sons().add(second);
-		second->parent = first;
+		first->get_sons().add_node(second_node);
+		second->parent = first_node;
 		first->parent = nullptr;
 		++first->sub_tree_order;
 
-		return first;
+		return first_node;
 	}
-
 
 	void reconstruct_heap()
 	{
@@ -60,13 +62,14 @@ class FibonacciHeap
 		for (std::int32_t i = 0; i < orders; i++)
 			roots[i] = nullptr;
 
-		for (auto current = binomialTrees.begin();
-			current != binomialTrees.end();
-			current = ++*current)
+		for (;;)
 		{
-			sub_tree_root* h = **current;
-			std::int32_t cur_order = h->sub_tree_order;
+			if (binomialTrees.empty())
+				break;
 
+			sub_tree_root* h = binomialTrees.remove(binomialTrees.get_first());
+
+			int32_t cur_order = h->value->sub_tree_order;
 			while (roots[cur_order] != nullptr)
 			{
 				steps++;
@@ -78,15 +81,15 @@ class FibonacciHeap
 			roots[cur_order] = h;
 		}
 
-		binomialTrees.clear_all(true);
+		binomialTrees.reset_no_delete();
 
 		for (std::int32_t i = 0; i < orders; i++)
 		{
-			if(roots[i] != nullptr)
+			if (roots[i] != nullptr)
 			{
-				binomialTrees.add(roots[i]);
+				binomialTrees.add_node(roots[i]);
 
-				if (treeWithMin == nullptr || roots[i]->get_key() < (*treeWithMin)->get_key())
+				if (treeWithMin == nullptr || roots[i]->value->get_key() < treeWithMin->value->get_key())
 				{
 					treeWithMin = binomialTrees.get_last();
 				}
@@ -100,7 +103,19 @@ class FibonacciHeap
 	std::int32_t steps;
 
 
+	void dump()
+	{
+		auto* it = binomialTrees.begin();
+		while (it != nullptr)
+		{
+			it->dump();
+			it = it->next;
+		}
+	}
+
 public:
+	typedef ListNode<node_t*> node;
+
 	virtual ~FibonacciHeap()
 	{
 	}
@@ -127,43 +142,80 @@ public:
 	};
 
 
-	virtual void insert(const TKey& key, const TValue& val)
+
+	virtual node* insert(const TKey& key, const TValue& val)
 	{
 		node_t* new_tree = new node_t(key, val);
-		bool reset_min = binomialTrees.empty() || (*treeWithMin)->get_key() > new_tree->get_key();
+		bool reset_min = binomialTrees.empty() || treeWithMin->value->get_key() > new_tree->get_key();
 
-		binomialTrees.add(new_tree);
+		node* res = binomialTrees.add(new_tree);
 
-		if(reset_min)
+		if (reset_min)
 			treeWithMin = binomialTrees.get_last();
 
 		size++;
+
+		dump();
+		return res;
 	};
 
-	virtual void delete_min()
+	virtual node* delete_min()
 	{
 		if (treeWithMin != nullptr)
 		{
 			deletes++;
 
-			auto* sons = (*treeWithMin)->take_sons_ownership();
+			auto* sons = treeWithMin->value->take_sons_ownership();
 			//delete treeWithMin;
-			binomialTrees.remove(treeWithMin);
+			auto* res = binomialTrees.remove(treeWithMin);
 			treeWithMin = nullptr;
 
 			size--;
 
 			steps++;
 
-			binomialTrees.MergeWithAndDestroy(sons);
+			binomialTrees.merge_with_and_destroy(sons);
 			reconstruct_heap();
+
+			dump();
+
+			return res;
 		}
+
+		return nullptr;
 	};
 
-	virtual void decrease_key(const TKey& key, const TKey& newKey)
+	virtual void decrease_key(node* u, const TKey& newKey)
 	{
+		u->value->set_key(newKey);
 
-		
+		auto* p = u->value->parent;
+		if (p == nullptr || p->value->get_key() <= u->value->get_key())
+			return;
+
+		u->value->reset_lost_son();
+		u->value->parent->value->get_sons().remove(u);
+		u->value->parent = nullptr;
+		binomialTrees.add_node(u);
+
+
+		if (newKey < treeWithMin->value->get_key())
+			treeWithMin = u;
+
+		while (p->value->parent != nullptr && p->value->get_lost_son())
+		{
+			u = p;
+			p = u->value->parent;
+			u->value->reset_lost_son();
+			u->value->parent->value->get_sons().remove(u);
+			u->value->parent = nullptr;
+			binomialTrees.add_node(u);
+		}
+
+		if (p->value->parent != nullptr)
+			p->value->set_lost_son();
+
+		dump();
 	};
 };
 

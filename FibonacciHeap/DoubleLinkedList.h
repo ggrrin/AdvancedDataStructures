@@ -18,10 +18,12 @@ public:
 	virtual ~DoubleLinkedList()
 	{
 		auto* it = last;
-		while(it != nullptr)
+		while (it != nullptr)
 		{
-			delete it;
+			auto* to_del = it;
 			it = it->previous;
+			remove(to_del);
+			delete to_del;
 		}
 	}
 
@@ -29,40 +31,48 @@ public:
 	{
 		return first;
 	};
-	
+
 	ListNode<TValue>* get_last()
 	{
 		return last;
 	};
 
-	void add(const TValue val)
+	ListNode<TValue>* add(const TValue val)
 	{
+		auto* new_node = new ListNode<TValue>(val);
+		add_node(new_node);
+		return new_node;
+	}
+
+	void add_node(ListNode<TValue>* new_node)
+	{
+		new_node->null_list();
+
 		if (last == nullptr || first == nullptr)
 		{
 			if (last != first)
 				throw "Structure is broken";
 
-			first = last = new ListNode<TValue>(val);
+			first = last = new_node;
 		}
 		else
 		{
-			last->next = new ListNode<TValue>(val);
+			last->next = new_node;
 			last->next->previous = last;
 			last = last->next;
 		}
 	}
 
-	void clear_all(bool node_only = false)
+	void reset_no_delete()
 	{
-		while(!empty())
-			remove(get_first(), node_only);
+		first = last = nullptr;
 	}
 
-	void MergeWithAndDestroy(DoubleLinkedList* list)
+	void merge_with_and_destroy(DoubleLinkedList* list)
 	{
 		if (!list->empty())
 		{
-			if (last == nullptr)
+			if (last == nullptr || first == nullptr)
 			{
 				first = list->first;
 				last = list->last;
@@ -75,14 +85,13 @@ public:
 			}
 		}
 
-		first = last = nullptr;
+		list->reset_no_delete();
 		delete list;
 	}
 
-	void remove(ListNode<TValue>* node, bool node_only = false)
+	ListNode<TValue>* remove(ListNode<TValue>* node)
 	{
-
-		if(node == first && node == last)
+		if (node == first && node == last)
 		{
 			first = last = nullptr;
 		}
@@ -91,7 +100,7 @@ public:
 			first = node->next;
 			first->previous = nullptr;
 		}
-		else if(node->next == nullptr)
+		else if (node->next == nullptr)
 		{
 			last = node->previous;
 			last->next = nullptr;
@@ -102,12 +111,8 @@ public:
 			node->next->previous = node->previous;
 		}
 
-		if(node_only)
-		{
-			node->value = nullptr;
-		}
-
-		delete node;
+		node->null_list();
+		return node;
 	}
 
 	bool empty() const

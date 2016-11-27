@@ -11,8 +11,9 @@ void test1(FibonacciHeap<int, int>& heap)
 	heap.insert(3, 2);
 }
 
-void test3(FibonacciHeap<int, int>& heap)
+void test3()
 {
+	FibonacciHeap<int, int> heap;
 	heap.insert(3, 3);
 	heap.delete_min();
 	heap.insert(2, 4);
@@ -26,16 +27,20 @@ void test3(FibonacciHeap<int, int>& heap)
 	heap.delete_min();
 	heap.insert(1, 8);
 	heap.delete_min();
-	heap.insert(3, 9);
+	auto* x= heap.insert(3, 9);
 	heap.insert(4, 10);
-	heap.insert(5, 11);
+	heap.insert(2, 11);
 	heap.insert(3, 12);
 	heap.insert(1, 13);
 	heap.delete_min();
+	heap.decrease_key(x, 0);
+
+
 }
 
-void test2(FibonacciHeap<int, int>& heap)
+void test2()
 {
+	FibonacciHeap<int, int> heap;
 	heap.insert(2, 1);
 	heap.insert(1, 2);
 	heap.insert(3, 3);
@@ -96,8 +101,10 @@ int32_t parse_num(const char* str, const char*& end)
 	return res;
 }
 
+typedef FibonacciHeap<int32_t, int32_t> heap;
+
 //writes one point of the graph to output file and deletes tree
-void log(FibonacciHeap<int32_t, int32_t>* tree, int size, std::ofstream& o)
+void log(heap* tree, int size, std::ofstream& o)
 {
 	if (tree != nullptr)
 	{
@@ -105,6 +112,7 @@ void log(FibonacciHeap<int32_t, int32_t>* tree, int size, std::ofstream& o)
 		delete tree;
 	}
 }
+
 
 void test(std::string in)
 {
@@ -116,7 +124,9 @@ void test(std::string in)
 #endif
 
 	std::string line;
-	FibonacciHeap<int32_t, int32_t>* tree = nullptr;
+	heap* tree = nullptr;
+	heap::node** identifiers = nullptr;
+	
 	int size = 0;
 
 	while (!i.eof() && !i.fail())
@@ -128,14 +138,20 @@ void test(std::string in)
 		const char* end = nullptr;
 		if (line[0] == '#')
 		{
+			//delete previous tree
 			log(tree, size, o);
+
+			auto value = parse_num(line.substr(1).c_str(), end);
+			size = value;
 #ifdef NAIVE
 			tree = new NaiveFibonacciHeap<int32_t, int32_t>();
 #else
-			tree = new FibonacciHeap<int32_t, int32_t>();
+			tree = new heap();
 #endif
-			auto value = parse_num(line.substr(1).c_str(), end);
-			size = value;
+			identifiers = new heap::node*[size];
+
+			for (int x = 0; x < size; ++x)
+				identifiers[x] = nullptr;
 		}
 		else
 		{
@@ -143,10 +159,10 @@ void test(std::string in)
 			std::string params = line.substr(3);
 			if (token == "INS")
 			{
-				auto value1 = parse_num(params.c_str(), end);
-				auto value2 = parse_num(end, end);
+				auto identifier = parse_num(params.c_str(), end);
+				auto key = parse_num(end, end);
 
-				tree->insert(value1, value2);
+				identifiers[identifier] = tree->insert(key, identifier);
 			}
 			else if (token == "DEL")
 			{
@@ -154,10 +170,10 @@ void test(std::string in)
 			}
 			else if (token == "DEC")
 			{
-				auto value1 = parse_num(params.c_str(), end);
-				auto value2 = parse_num(end, end);
+				auto identifier = parse_num(params.c_str(), end);
+				auto new_key = parse_num(end, end);
 
-				tree->decrease_key(value1, value2);
+				tree->decrease_key(identifiers[identifier], new_key);
 			}
 		}
 	}
@@ -169,6 +185,8 @@ void test(std::string in)
 
 int main(int argc, char* argv[])
 {
+	test3();
+	return 0;
 	if (argc > 1)
 		test(argv[1]);
 	else
