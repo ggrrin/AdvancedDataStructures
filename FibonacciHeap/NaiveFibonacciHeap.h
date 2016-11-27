@@ -4,10 +4,10 @@
 #include "FibonacciHeap.h"
 
 template<typename TKey, typename TValue>
-class NaiveFibonacciHeap : public FibonacciHeap
+class NaiveFibonacciHeap : public FibonacciHeap<TKey,TValue>
 {
 public:
-	virtual void decrease_key(node* u, const TKey& newKey) override
+	virtual void decrease_key(FibonacciHeap<TKey,TValue>::node* u, const TKey& newKey) override
 	{
 		u->value->set_key(newKey);
 

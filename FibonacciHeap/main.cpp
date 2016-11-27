@@ -1,6 +1,5 @@
 
 #include "FibonacciHeap.h"
-#include "NaiveFibonacciHeap.h"
 
 #include <string>
 #include <iostream>
