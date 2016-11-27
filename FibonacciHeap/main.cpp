@@ -128,6 +128,7 @@ void test(std::string in)
 	heap* tree = nullptr;
 	heap::node** identifiers = nullptr;
 	
+	int input_line_number = 0;
 	int size = 0;
 
 	while (!i.eof() && !i.fail())
@@ -135,6 +136,8 @@ void test(std::string in)
 		std::getline(i, line);
 		if (line.size() <= 1)
 			break;
+
+		input_line_number++;
 
 		const char* end = nullptr;
 		if (line[0] == '#')
@@ -163,16 +166,16 @@ void test(std::string in)
 				auto identifier = parse_num(params.c_str(), end);
 				auto key = parse_num(end, end);
 
-				if(identifiers[identifier] != nullptr)
-					throw "identifiers corruption add";
+				//if(identifiers[identifier] != nullptr)
+					//throw "identifiers corruption add";
 				identifiers[identifier] = tree->insert(key, identifier);
 			}
 			else if (token == "DEL")
 			{
 				auto* del = tree->delete_min();
 				auto idf = del->value->get_value();
-				if (identifiers[idf] == nullptr)
-					throw "identifiers corruption clear";
+				//if (identifiers[idf] == nullptr)
+				//	throw "identifiers corruption clear";
 
 				identifiers[idf] = nullptr;
 				delete del;
@@ -182,7 +185,9 @@ void test(std::string in)
 				auto identifier = parse_num(params.c_str(), end);
 				auto new_key = parse_num(end, end);
 
-				tree->decrease_key(identifiers[identifier], new_key);
+				if(identifiers[identifier] != nullptr && 
+					identifiers[identifier]->value->get_key() > new_key) 
+					tree->decrease_key(identifiers[identifier], new_key);
 			}
 		}
 	}

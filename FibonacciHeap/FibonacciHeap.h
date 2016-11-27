@@ -51,15 +51,20 @@ protected:
 	}
 
 
-	int32_t get_order_estimate()
+	uint32_t get_order_estimate()
 	{
-		int32_t size_estimate = 0;
+		double_t size_estimate = 0;
 		for (auto* it = binomialTrees.begin(); it != nullptr; it = it->next)
 		{
+			auto prev = size_estimate;
 			size_estimate += exp2(it->value->sub_tree_order);
+
+			if(size_estimate <  prev)
+				throw "probably overflow";
 		}
 
-		return 1 + log2(size_estimate);
+
+		return 1 + static_cast<uint32_t>(log2(size_estimate));
 	}
 
 	void reconstruct_heap()
@@ -122,6 +127,12 @@ protected:
 
 	void dump()
 	{
+		
+	}
+
+public:
+	void dump_tree()
+	{
 		auto* it = binomialTrees.begin();
 		while (it != nullptr)
 		{
@@ -129,8 +140,7 @@ protected:
 			it = it->next;
 		}
 	}
-
-public:
+	
 	typedef ListNode<node_t*> node;
 
 	virtual ~FibonacciHeap()
@@ -140,12 +150,14 @@ public:
 	FibonacciHeap() :
 		binomialTrees(),
 		treeWithMin(nullptr),
-		size(0)
+		size(0),
+		steps(0),
+		deletes(0)
 	{}
 
 	double get_average_delete_step_count() const
 	{
-		return static_cast<double>(deletes) / static_cast<double>(steps);
+		return static_cast<double>(steps) / static_cast<double>(deletes);
 	}
 
 	std::int32_t get_size() const
@@ -163,7 +175,7 @@ public:
 	virtual node* insert(const TKey& key, const TValue& val)
 	{
 		node_t* new_tree = new node_t(key, val);
-		bool reset_min = binomialTrees.empty() || treeWithMin->value->get_key() > new_tree->get_key();
+		bool reset_min = binomialTrees.empty() || treeWithMin->value->get_key() >= new_tree->get_key();
 
 		node* res = binomialTrees.add(new_tree);
 
