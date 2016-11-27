@@ -50,6 +50,18 @@ protected:
 		return first_node;
 	}
 
+
+	int32_t get_order_estimate()
+	{
+		int32_t size_estimate = 0;
+		for (auto* it = binomialTrees.begin(); it != nullptr; it = it->next)
+		{
+			size_estimate += exp2(it->value->sub_tree_order);
+		}
+
+		return 1 + log2(size_estimate);
+	}
+
 	void reconstruct_heap()
 	{
 		if (binomialTrees.empty())
@@ -58,7 +70,7 @@ protected:
 			return;
 		}
 
-		auto orders = 1 + static_cast<std::int32_t>(ceil(log2(get_size())));
+		auto orders = get_order_estimate();//1 + static_cast<std::int32_t>(ceil(log2(get_size())));
 		sub_tree_root** roots = new sub_tree_root*[orders];
 
 		for (std::int32_t i = 0; i < orders; i++)
@@ -74,6 +86,9 @@ protected:
 			int32_t cur_order = h->value->sub_tree_order;
 			while (roots[cur_order] != nullptr)
 			{
+				if (cur_order >= orders)
+					throw "Consolidation array overflow.";
+
 				steps++;
 				h = join_binomial_sub_heaps(h, roots[cur_order]);
 				roots[cur_order] = nullptr;
