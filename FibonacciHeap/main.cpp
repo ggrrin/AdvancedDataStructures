@@ -16,24 +16,24 @@ void test3()
 {
 	FibonacciHeap<int, int> heap;
 	heap.insert(3, 3);
-	heap.delete_min();
+	delete heap.delete_min();
 	heap.insert(2, 4);
 	heap.insert(3, 6);
-	heap.delete_min();
+	delete heap.delete_min();
 	heap.insert(2, 7);
 	heap.insert(2, 1);
 	heap.insert(1, 2);
-	heap.delete_min();
+	delete heap.delete_min();
 	heap.insert(1, 5);
-	heap.delete_min();
+	delete heap.delete_min();
 	heap.insert(1, 8);
-	heap.delete_min();
+	delete heap.delete_min();
 	auto* x= heap.insert(3, 9);
 	heap.insert(4, 10);
 	heap.insert(2, 11);
 	heap.insert(3, 12);
 	heap.insert(1, 13);
-	heap.delete_min();
+	delete heap.delete_min();
 	heap.decrease_key(x, 0);
 
 
@@ -163,11 +163,19 @@ void test(std::string in)
 				auto identifier = parse_num(params.c_str(), end);
 				auto key = parse_num(end, end);
 
+				if(identifiers[identifier] != nullptr)
+					throw "identifiers corruption add";
 				identifiers[identifier] = tree->insert(key, identifier);
 			}
 			else if (token == "DEL")
 			{
-				tree->delete_min();
+				auto* del = tree->delete_min();
+				auto idf = del->value->get_value();
+				if (identifiers[idf] == nullptr)
+					throw "identifiers corruption clear";
+
+				identifiers[idf] = nullptr;
+				delete del;
 			}
 			else if (token == "DEC")
 			{
@@ -186,8 +194,8 @@ void test(std::string in)
 
 int main(int argc, char* argv[])
 {
-	test3();
-	return 0;
+	//test3();
+	//return 0;
 	if (argc > 1)
 		test(argv[1]);
 	else

@@ -20,6 +20,11 @@ class BinomialTreeNode
 	
 public:
 
+	TValue& get_value()
+	{
+		return value;
+	}
+
 	
 
 
