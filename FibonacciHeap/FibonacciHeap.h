@@ -121,8 +121,8 @@ protected:
 		delete[] roots;
 	}
 
-	std::int32_t deletes;
-	std::int32_t steps;
+	std::uint64_t deletes;
+	std::uint64_t steps;
 
 
 	void dump()

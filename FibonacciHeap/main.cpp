@@ -110,6 +110,7 @@ void log(heap* tree, int size, std::ofstream& o)
 	if (tree != nullptr)
 	{
 		o << size << " " << tree->get_average_delete_step_count() << std::endl;
+		o.flush();
 		delete tree;
 	}
 }
@@ -159,6 +160,7 @@ void test(std::string in)
 		}
 		else
 		{
+
 			std::string token = line.substr(0, 3);
 			std::string params = line.substr(3);
 			if (token == "INS")
