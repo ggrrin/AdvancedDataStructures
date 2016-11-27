@@ -271,26 +271,7 @@ public:
 		u->value->parent->value->get_sons().remove(u);
 		u->value->parent = nullptr;
 		this->binomialTrees.add_node(u);
-
-
-
-		while (p->value->parent != nullptr && p->value->get_lost_son())
-		{
-			u = p;
-			p = u->value->parent;
-			u->value->reset_lost_son();
-			u->value->parent->value->get_sons().remove(u);
-			u->value->parent = nullptr;
-			this->binomialTrees.add_node(u);
-		}
-
-		if (p->value->parent != nullptr)
-			p->value->set_lost_son();
-
-		this->dump();
 	};
-
-
 };
 
 

@@ -117,7 +117,7 @@ void log(heap* tree, int size, std::ofstream& o)
 
 void test(std::string in)
 {
-	std::istream& i = std::ifstream("HARD-test"); //std::cin;
+	std::istream& i = std::cin;
 #ifdef NAIVE
 	std::ofstream o(in + "N.out", std::ofstream::out | std::ofstream::trunc);
 #else
