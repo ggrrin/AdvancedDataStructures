@@ -3,6 +3,13 @@
 
 #include <cstdint>
 #include <string>
+#include <stdio.h>
+
+void thr(char* message)
+{
+	printf("%s\n", message);
+	throw message;
+}
 
 template<typename TValue>
 class ListNode

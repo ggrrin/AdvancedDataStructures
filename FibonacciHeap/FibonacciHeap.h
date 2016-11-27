@@ -40,7 +40,7 @@ protected:
 		auto* second = second_node->value;
 
 		if (first->sub_tree_order != second->sub_tree_order)
-			throw "Orders does not fit.";
+			thr("Orders does not fit.");
 
 		first->get_sons().add_node(second_node);
 		second->parent = first_node;
@@ -60,7 +60,7 @@ protected:
 			size_estimate += exp2(it->value->sub_tree_order);
 
 			if(size_estimate <  prev)
-				throw "probably overflow";
+				thr("probably overflow");
 		}
 
 
@@ -92,7 +92,7 @@ protected:
 			while (roots[cur_order] != nullptr)
 			{
 				if (cur_order >= orders)
-					throw "Consolidation array overflow.";
+					thr("Consolidation array overflow.");
 
 				steps++;
 				h = join_binomial_sub_heaps(h, roots[cur_order]);
@@ -219,6 +219,11 @@ public:
 		u->value->set_key(newKey);
 
 		auto* p = u->value->parent;
+
+
+		if (newKey < treeWithMin->value->get_key())
+			treeWithMin = u;
+
 		if (p == nullptr || p->value->get_key() <= u->value->get_key())
 			return;
 
@@ -228,8 +233,6 @@ public:
 		binomialTrees.add_node(u);
 
 
-		if (newKey < treeWithMin->value->get_key())
-			treeWithMin = u;
 
 		while (p->value->parent != nullptr && p->value->get_lost_son())
 		{
@@ -257,6 +260,10 @@ public:
 		u->value->set_key(newKey);
 
 		auto* p = u->value->parent;
+
+		if (newKey < this->treeWithMin->value->get_key())
+			this->treeWithMin = u;
+
 		if (p == nullptr || p->value->get_key() <= u->value->get_key())
 			return;
 
@@ -266,8 +273,6 @@ public:
 		this->binomialTrees.add_node(u);
 
 
-		if (newKey < this->treeWithMin->value->get_key())
-			this->treeWithMin = u;
 
 		while (p->value->parent != nullptr && p->value->get_lost_son())
 		{

@@ -51,7 +51,7 @@ public:
 		if (last == nullptr || first == nullptr)
 		{
 			if (last != first)
-				throw "Structure is broken";
+				thr("Structure is broken");
 
 			first = last = new_node;
 		}

@@ -117,7 +117,7 @@ void log(heap* tree, int size, std::ofstream& o)
 
 void test(std::string in)
 {
-	std::istream& i = std::cin;
+	std::istream& i = std::ifstream("HARD-test"); //std::cin;
 #ifdef NAIVE
 	std::ofstream o(in + "N.out", std::ofstream::out | std::ofstream::trunc);
 #else
@@ -166,16 +166,16 @@ void test(std::string in)
 				auto identifier = parse_num(params.c_str(), end);
 				auto key = parse_num(end, end);
 
-				//if(identifiers[identifier] != nullptr)
-					//throw "identifiers corruption add";
+				if(identifiers[identifier] != nullptr)
+					thr("identifiers corruption add");
 				identifiers[identifier] = tree->insert(key, identifier);
 			}
 			else if (token == "DEL")
 			{
 				auto* del = tree->delete_min();
 				auto idf = del->value->get_value();
-				//if (identifiers[idf] == nullptr)
-				//	throw "identifiers corruption clear";
+				if (identifiers[idf] == nullptr)
+					thr("identifiers corruption clear");
 
 				identifiers[idf] = nullptr;
 				delete del;

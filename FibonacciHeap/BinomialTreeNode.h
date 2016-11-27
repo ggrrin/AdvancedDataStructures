@@ -42,7 +42,7 @@ public:
 	void set_lost_son()
 	{
 		if (lostSon)
-			throw "Already lost son!";
+			thr("Already lost son!");
 
 		lostSon = true;
 	}
