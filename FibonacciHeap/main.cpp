@@ -201,8 +201,6 @@ void test(std::string in)
 
 int main(int argc, char* argv[])
 {
-	//test3();
-	//return 0;
 	if (argc > 1)
 		test(argv[1]);
 	else
