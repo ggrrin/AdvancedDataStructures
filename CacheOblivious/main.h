@@ -1,6 +1,7 @@
 #include <cstdint>
 #include <exception>
 #include <chrono>
+#include <stdio.h>
 
 #define SMALL 16
 
@@ -23,13 +24,23 @@ struct matrix
 		return orig_dim * orig_dim;
 	}
 
+	std::int32_t get_i_glob(std::int32_t i) const
+	{
+		return offset_m + i;
+	}
+
+	std::int32_t get_j_glob(std::int32_t j) const
+	{
+		return offset_n + j;
+	}
+
 	//zero based!!!!!
 	std::int32_t& at(std::int32_t i, std::int32_t j)
 	{
-		std::int32_t g_i = offset_m + i;
-		std::int32_t g_j = offset_n + j;
+		std::int32_t g_i = get_i_glob(i);
+		std::int32_t g_j = get_j_glob(j);
 		
-		return *(data + (g_i * orig_dim + g_j));
+		return data[g_i * orig_dim + g_j];
 	}
 
 	std::int32_t size() const

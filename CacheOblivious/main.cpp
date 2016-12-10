@@ -1,5 +1,12 @@
 #include "main.h" 
 
+//#define SIM
+
+void report_swap(std::int32_t i1, std::int32_t j1, std::int32_t i2, std::int32_t j2)
+{
+	printf("X %d %d %d %d\n", i1, j1, i2, j2);
+}
+
 void trivial_transpose(matrix mat)
 {
 	if (mat.m != mat.n)
@@ -9,9 +16,14 @@ void trivial_transpose(matrix mat)
 	{
 		for (std::int32_t j = 0; j < i; j++)
 		{
+#ifdef SIM
+			report_swap(mat.get_i_glob(i), mat.get_j_glob(j),
+				mat.get_i_glob(j), mat.get_j_glob(i));
+#else
 			std::int32_t temp = mat.at(i, j);
 			mat.at(i, j) = mat.at(j, i);
 			mat.at(j, i) = temp;
+#endif 
 		}
 	}
 }
@@ -27,9 +39,15 @@ void transpose_and_swap(matrix mat1, matrix mat2)
 		{
 			for (std::int32_t j = 0; j < mat1.n; j++)
 			{
+#ifdef SIM
+				report_swap(mat1.get_i_glob(i), mat1.get_j_glob(j),
+					mat2.get_i_glob(j), mat2.get_j_glob(i));
+#else
 				std::int32_t temp = mat1.at(i, j);
 				mat1.at(i, j) = mat2.at(j, i);
 				mat2.at(j, i) = temp;
+#endif
+
 			}
 		}
 	}
@@ -128,14 +146,45 @@ void test2(std::int32_t k)
 	delete[] data2;
 }
 
+
+void simulate(std::int32_t max_size_MB)
+{
+	std::int32_t element_size = sizeof(std::int32_t);
+	std::uint32_t max_elements = max_size_MB * 1024 * 1024 /  element_size;
+
+	//N = floor(2 ^ {k / 9}) pro k >= 54, 55, 56
+	std::int32_t max_k = log2(max_elements) * 9;
+
+	for (std::int32_t k = 54; k < max_k; k++)
+	{
+		std::int32_t N = exp2(k / 9);
+
+#ifdef SIM
+		printf("N %d\n", N);
+		transpose_on_diagonal(matrix(nullptr, N, N, N, 0, 0));
+		printf("E\n");
+#else 
+		std::int32_t* data = new std::int32_t[N*N];
+		transpose_on_diagonal(matrix(data, N, N, N, 0, 0));
+		delete[] data;
+#endif 
+	}
+}
+
 int main(int argc, char* argv[])
 {
 	//test1();
 	//test2(293);
+	//test2(10001);
 
-
-	test2(10001);
-
-
+	if (argc == 2)
+	{
+		int mb_size = atoi(argv[1]);
+		simulate(mb_size); 
+	}
+	else
+	{
+		printf("invalid arguments");
+	}
 	return 0;
 }
