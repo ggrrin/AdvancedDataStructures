@@ -4,7 +4,7 @@
 
 void report_swap(my_int i1, my_int j1, my_int i2, my_int j2)
 {
-	printf("X %d %d %d %d\n", i1, j1, i2, j2);
+	printf("X %lld %lld %lld %lld\n", i1, j1, i2, j2);
 }
 
 void trivial_transpose(matrix mat)
@@ -167,11 +167,16 @@ void simulate(my_int max_size_MB)
 #else 
 
 		auto t1 = std::chrono::steady_clock::now();
-		transpose_on_diagonal(matrix(data, N, N, N, 0, 0));
+		const double rep_count = 10.0;
+		for (my_int rep = 0; rep < rep_count; rep++	)
+		{
+			transpose_on_diagonal(matrix(data, N, N, N, 0, 0));
+		}
+
 		auto t2 = std::chrono::steady_clock::now();
 
 		auto diff = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1);
-		printf("%d %lld\n", N, diff.count());
+		printf("%lld %f\n", N, diff.count() / rep_count);
 
 #endif 
 	}
@@ -188,9 +193,9 @@ int main(int argc, char* argv[])
 	//transpose_on_diagonal(matrix(nullptr,5 , 5, 5, 0, 0));
 	//return 0;
 
-	if (true)//argc == 2)
+	if (argc == 2)
 	{
-		int mb_size = atoi("2048");//argv[1]);
+		int mb_size = atoi(argv[1]);
 		simulate(mb_size); 
 	}
 	else
