@@ -8,6 +8,7 @@ data*.txt
 *chunk_*
 data*.out
 *.opendb
+*.db
 *.opensdf
 .vs/*
 *.sdf
