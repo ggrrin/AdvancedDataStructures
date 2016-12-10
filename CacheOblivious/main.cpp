@@ -2,7 +2,7 @@
 
 //#define SIM
 
-void report_swap(std::int32_t i1, std::int32_t j1, std::int32_t i2, std::int32_t j2)
+void report_swap(my_int i1, my_int j1, my_int i2, my_int j2)
 {
 	printf("X %d %d %d %d\n", i1, j1, i2, j2);
 }
@@ -12,15 +12,15 @@ void trivial_transpose(matrix mat)
 	if (mat.m != mat.n)
 		throw 0;
 	
-	for (std::int32_t i = 0; i < mat.m; i++)
+	for (my_int i = 0; i < mat.m; i++)
 	{
-		for (std::int32_t j = 0; j < i; j++)
+		for (my_int j = 0; j < i; j++)
 		{
 #ifdef SIM
 			report_swap(mat.get_i_glob(i), mat.get_j_glob(j),
 				mat.get_i_glob(j), mat.get_j_glob(i));
 #else
-			std::int32_t temp = mat.at(i, j);
+			my_val temp = mat.at(i, j);
 			mat.at(i, j) = mat.at(j, i);
 			mat.at(j, i) = temp;
 #endif 
@@ -35,15 +35,15 @@ void transpose_and_swap(matrix mat1, matrix mat2)
 
 	if (mat1.size() <= SMALL)
 	{
-		for (std::int32_t i = 0; i < mat1.m; i++)
+		for (my_int i = 0; i < mat1.m; i++)
 		{
-			for (std::int32_t j = 0; j < mat1.n; j++)
+			for (my_int j = 0; j < mat1.n; j++)
 			{
 #ifdef SIM
 				report_swap(mat1.get_i_glob(i), mat1.get_j_glob(j),
 					mat2.get_i_glob(j), mat2.get_j_glob(i));
 #else
-				std::int32_t temp = mat1.at(i, j);
+				my_val temp = mat1.at(i, j);
 				mat1.at(i, j) = mat2.at(j, i);
 				mat2.at(j, i) = temp;
 #endif
@@ -91,9 +91,9 @@ void transpose_on_diagonal(matrix mat)
 
 void test1()
 {
-	const std::int32_t k = 5;
-	const std::int32_t k2= k*k;
-	std::int32_t data1[k2] = {
+	const my_int k = 5;
+	const my_int k2= k*k;
+	my_val data1[k2] = {
 		1, 2, 3, 4, 5, 
 		6, 7, 8, 9, 10, 
 		11, 12, 13, 14, 15, 
@@ -101,7 +101,7 @@ void test1()
 		21, 22, 23, 24, 25
 	};
 
-	std::int32_t data2[k2] = {
+	my_val data2[k2] = {
 		1, 2, 3, 4, 5, 
 		6, 7, 8, 9, 10, 
 		11, 12, 13, 14, 15, 
@@ -114,11 +114,11 @@ void test1()
 	transpose_on_diagonal(matrix(data2, k, k, k, 0, 0));
 }
 
-void test2(std::int32_t k)
+void test2(my_int k)
 {
-	std::int32_t k2= k*k;
-	std::int32_t* data1 = new std::int32_t[k2];
-	std::int32_t* data2 = new std::int32_t[k2];
+	my_int k2= k*k;
+	my_val* data1 = new my_val[k2];
+	my_val* data2 = new my_val[k2];
 
 	for (size_t i = 0; i < k2; i++)
 		data1[i] = data2[i] = i + 1;
@@ -147,14 +147,15 @@ void test2(std::int32_t k)
 }
 
 
-void simulate(std::int32_t max_size_MB)
+void simulate(my_int max_size_MB)
 {
-	std::uint32_t max_elements = max_size_MB * 1024 * 1024 / sizeof(std::int32_t);
-	std::int32_t* data = new std::int32_t[max_elements];
+	my_int max_elements = max_size_MB * 1024 * 1024 / sizeof(my_val);
+	my_val* data = new my_val[max_elements];
+	my_int sq = sqrt(max_elements);
 
-	for (std::int32_t k = 54; ; k++)
+	for (my_int k = 54; ; k++)
 	{
-		std::int32_t N = exp2(k / 9);
+		my_int N = exp2(k / 9.0);
 
 		if (N*N >= max_elements)
 			break;
@@ -183,9 +184,13 @@ int main(int argc, char* argv[])
 	//test2(293);
 	//test2(10001);
 
-	if (argc == 2)
+	//test3
+	//transpose_on_diagonal(matrix(nullptr,5 , 5, 5, 0, 0));
+	//return 0;
+
+	if (true)//argc == 2)
 	{
-		int mb_size = atoi(argv[1]);
+		int mb_size = atoi("2048");//argv[1]);
 		simulate(mb_size); 
 	}
 	else
