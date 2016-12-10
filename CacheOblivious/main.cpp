@@ -149,26 +149,32 @@ void test2(std::int32_t k)
 
 void simulate(std::int32_t max_size_MB)
 {
-	std::int32_t element_size = sizeof(std::int32_t);
-	std::uint32_t max_elements = max_size_MB * 1024 * 1024 /  element_size;
+	std::uint32_t max_elements = max_size_MB * 1024 * 1024 / sizeof(std::int32_t);
+	std::int32_t* data = new std::int32_t[max_elements];
 
-	//N = floor(2 ^ {k / 9}) pro k >= 54, 55, 56
-	std::int32_t max_k = log2(max_elements) * 9;
-
-	for (std::int32_t k = 54; k < max_k; k++)
+	for (std::int32_t k = 54; ; k++)
 	{
 		std::int32_t N = exp2(k / 9);
+
+		if (N*N >= max_elements)
+			break;
 
 #ifdef SIM
 		printf("N %d\n", N);
 		transpose_on_diagonal(matrix(nullptr, N, N, N, 0, 0));
 		printf("E\n");
 #else 
-		std::int32_t* data = new std::int32_t[N*N];
+
+		auto t1 = std::chrono::steady_clock::now();
 		transpose_on_diagonal(matrix(data, N, N, N, 0, 0));
-		delete[] data;
+		auto t2 = std::chrono::steady_clock::now();
+
+		auto diff = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1);
+		printf("%d %lld\n", N, diff.count());
+
 #endif 
 	}
+	delete[] data;
 }
 
 int main(int argc, char* argv[])
