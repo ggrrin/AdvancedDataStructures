@@ -147,7 +147,7 @@ void test2(my_int k)
 }
 
 
-void simulate(my_int max_size_MB)
+void simulate(bool triv, my_int max_size_MB, my_int rep_count)
 {
 	my_int max_elements = max_size_MB * 1024 * 1024 / sizeof(my_val);
 	my_val* data = new my_val[max_elements];
@@ -167,16 +167,18 @@ void simulate(my_int max_size_MB)
 #else 
 
 		auto t1 = std::chrono::steady_clock::now();
-		const double rep_count = 10.0;
 		for (my_int rep = 0; rep < rep_count; rep++	)
 		{
-			transpose_on_diagonal(matrix(data, N, N, N, 0, 0));
+			if(!triv)
+				transpose_on_diagonal(matrix(data, N, N, N, 0, 0));
+			else
+				trivial_transpose(matrix(data, N, N, N, 0, 0));
 		}
 
 		auto t2 = std::chrono::steady_clock::now();
 
 		auto diff = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1);
-		printf("%lld %f\n", N, diff.count() / rep_count);
+		printf("%lld %f\n", N, diff.count() / (double)rep_count);
 
 #endif 
 	}
@@ -193,14 +195,15 @@ int main(int argc, char* argv[])
 	//transpose_on_diagonal(matrix(nullptr,5 , 5, 5, 0, 0));
 	//return 0;
 
-	if (argc == 2)
+	if (argc == 4 && (argv[0] == "t" || argv[0] == "n"))
 	{
-		int mb_size = atoi(argv[1]);
-		simulate(mb_size); 
+		int mb_size = atoi(argv[2]);
+		int measures_count = atoi(argv[3]);
+		simulate(argv[0] == "t", mb_size, measures_count); 
 	}
 	else
 	{
-		printf("invalid arguments");
+		printf("usage: main.out t|n <max_memory_usage_MB> <measures_count_per_N>\nt ... trivial\nn ... normal");
 	}
 	return 0;
 }
