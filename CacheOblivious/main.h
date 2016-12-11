@@ -2,6 +2,8 @@
 #include <exception>
 #include <chrono>
 #include <stdio.h>
+#include <math.h>
+#include <cstdlib>
 
 #define SMALL 16
 
