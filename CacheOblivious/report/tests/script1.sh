@@ -2,7 +2,7 @@
 gnuplot.exe << END
 set grid
 set xlabel 'size of matrix dimensions'
-set ylabel 'average time'
+set ylabel 'average time [micro seconds]'
 set terminal png size 1280,720
 #set logscale y 10101010101010101010  
 set output 'graph1.png'
