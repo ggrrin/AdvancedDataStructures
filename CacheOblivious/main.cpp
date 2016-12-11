@@ -156,6 +156,7 @@ void test2(my_int k)
 //funkce pro mereni vlastnosti algoritmu, jako vstup do grafu nebo simulatoru (pokud je difinovano SIM)
 void simulate(bool triv, my_int max_size_MB, my_int rep_count)
 {
+
 	my_int max_elements = max_size_MB * 1024 * 1024 / sizeof(my_val);
 	my_val* data = new my_val[max_elements];
 	my_int sq = sqrt(max_elements);
@@ -169,7 +170,11 @@ void simulate(bool triv, my_int max_size_MB, my_int rep_count)
 
 #ifdef SIM
 		printf("N %d\n", N);
-		transpose_on_diagonal(matrix(nullptr, N, N, N, 0, 0));
+		if(!triv)
+			transpose_on_diagonal(matrix(nullptr, N, N, N, 0, 0));
+		else
+			trivial_transpose(matrix(nullptr, N, N, N, 0, 0));
+			
 		printf("E\n");
 #else 
 
@@ -177,9 +182,13 @@ void simulate(bool triv, my_int max_size_MB, my_int rep_count)
 		for (my_int rep = 0; rep < rep_count; rep++	)
 		{
 			if(!triv)
+			{
 				transpose_on_diagonal(matrix(data, N, N, N, 0, 0));
+			}
 			else
+			{
 				trivial_transpose(matrix(data, N, N, N, 0, 0));
+			}
 		}
 
 		auto t2 = std::chrono::steady_clock::now();
