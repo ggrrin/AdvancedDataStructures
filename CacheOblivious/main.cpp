@@ -195,11 +195,16 @@ int main(int argc, char* argv[])
 	//transpose_on_diagonal(matrix(nullptr,5 , 5, 5, 0, 0));
 	//return 0;
 
-	if (argc == 4 && (argv[1] == "t" || argv[1] == "n"))
+	printf("%s\n", argv[1]);
+	printf("%s\n", argv[2]);
+	printf("%s\n", argv[3]);
+	printf("%d\n", argc);
+
+	if (argc == 4 && (argv[1][0] == 't' || argv[1][0] == 'n'))
 	{
 		int mb_size = atoi(argv[2]);
 		int measures_count = atoi(argv[3]);
-		simulate(argv[1] == "t", mb_size, measures_count); 
+		simulate(argv[1][0] == 't', mb_size, measures_count); 
 	}
 	else
 	{
