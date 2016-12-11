@@ -1,7 +1,7 @@
 #!/bin/awk
 
-/^Access/ {
-printf("%s ", $2);
+/^Elem/ {
+printf("%s ", sqrt($2));
 
 }
 

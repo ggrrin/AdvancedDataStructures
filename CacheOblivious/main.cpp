@@ -2,11 +2,13 @@
 
 //#define SIM
 
+//provede vypsani swapnutych prvku ve formatu pro simulator cache
 void report_swap(my_int i1, my_int j1, my_int i2, my_int j2)
 {
 	printf("X %lld %lld %lld %lld\n", i1, j1, i2, j2);
 }
 
+//transponuje matici trivialnim zpusobem
 void trivial_transpose(matrix mat)
 {
 	if (mat.m != mat.n)
@@ -28,6 +30,7 @@ void trivial_transpose(matrix mat)
 	}
 }
 
+//transponuje prvky mezi specifikovanymi sub-maticemi
 void transpose_and_swap(matrix mat1, matrix mat2)
 {
 	if (mat1.m != mat2.n || mat1.n != mat2.m)
@@ -70,6 +73,7 @@ void transpose_and_swap(matrix mat1, matrix mat2)
 	}
 }
 
+//transponuje sub-matici na diagonale
 void transpose_on_diagonal(matrix mat)
 {
 	if (mat.size() <= SMALL)
@@ -89,6 +93,7 @@ void transpose_on_diagonal(matrix mat)
 	}
 }
 
+//test algoritmu na trivialnim vstupu
 void test1()
 {
 	const my_int k = 5;
@@ -114,6 +119,7 @@ void test1()
 	transpose_on_diagonal(matrix(data2, k, k, k, 0, 0));
 }
 
+//complexnejsi test algoritmu
 void test2(my_int k)
 {
 	my_int k2= k*k;
@@ -147,6 +153,7 @@ void test2(my_int k)
 }
 
 
+//funkce pro mereni vlastnosti algoritmu, jako vstup do grafu nebo simulatoru (pokud je difinovano SIM)
 void simulate(bool triv, my_int max_size_MB, my_int rep_count)
 {
 	my_int max_elements = max_size_MB * 1024 * 1024 / sizeof(my_val);
