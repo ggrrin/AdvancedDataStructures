@@ -177,7 +177,7 @@ void simulate(bool triv, my_int max_size_MB, my_int rep_count)
 
 		auto t2 = std::chrono::steady_clock::now();
 
-		auto diff = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1);
+		auto diff = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1);
 		printf("%lld %f\n", N, diff.count() / (double)rep_count);
 
 #endif 
@@ -194,11 +194,6 @@ int main(int argc, char* argv[])
 	//test3
 	//transpose_on_diagonal(matrix(nullptr,5 , 5, 5, 0, 0));
 	//return 0;
-
-	printf("%s\n", argv[1]);
-	printf("%s\n", argv[2]);
-	printf("%s\n", argv[3]);
-	printf("%d\n", argc);
 
 	if (argc == 4 && (argv[1][0] == 't' || argv[1][0] == 'n'))
 	{
