@@ -1,12 +1,12 @@
 
 gnuplot.exe << END
 set grid
-set xlabel 'size of matrix dimensions'
-set ylabel 'average time [micro seconds]'
+set xlabel 'matrix dimension'
+set ylabel 'average time for swap [micro seconds]'
 set terminal png size 1280,720
-#set logscale y 10101010101010101010  
+set logscale x 2 
 set output 'graph1.png'
 set format x '%g'
 set term png
-plot 'measure-trivial.csv' with lines , 'measure-normal.csv' with lines 
+plot 'measure-trivial.csvS' with lines , 'measure-normal.csvS' with lines 
 END
