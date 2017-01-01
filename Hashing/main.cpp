@@ -6,7 +6,7 @@
 void test_hash()
 {
 	std::default_random_engine generator;
-	tabulation_hash_c16<uint64_t> hf1(1024, generator);
+	tabulation_hash_c2<uint64_t> hf1(1024, generator);
 	auto x1 = hf1.get_hash_code(0x00AE0FFFFF);
 
 	mult_hash<uint64_t> hf2(1341341, generator);
@@ -31,12 +31,19 @@ void uniform_random_test_batch()
 	for (size_t i = 0; i < table_size; ++i)
 	{
 		table.insert(distribution(generator));
-		if (i % 100 == 0 && i != 0)
+		const int batch = 10000; //58000;
+		if (i % batch == 0 && i != 0)
 		{
 			auto te = std::chrono::steady_clock::now();
 			auto diff = std::chrono::duration_cast<std::chrono::microseconds>(te - ts);
-			printf("%f %f\n", table.get_load_factor(), diff.count() / 100.0);
+			table.get_steps();
+			bool printTime = false;
+			if(printTime)
+				printf("%f %f\n", table.get_load_factor(), diff.count() / static_cast<float>(batch));
+			else
+				printf("%f %f\n", table.get_load_factor(), table.get_steps() / static_cast<float>(batch));
 			ts = te;
+			table.reset_steps();
 		}
 
 		if (table.should_stop())
@@ -72,13 +79,13 @@ void sequential_test_batch()
 		}
 		average_steps /= static_cast<float>(measure_count);
 
-		printf("%u %f\n", table_size, average_steps);
+		printf("%llu %f\n", table_size, average_steps);
 	}
 }
 
 void usage()
 {
-	printf("usage: main.out u|s TEST_NUMBER \nu... random uniform test \ns... sequential test for linear probbing");
+	printf("usage: main.out u|s TEST_NUMBER \nu... random uniform test [1-5] \ns... sequential test for linear probbing [1-2]");
 }
 
 void sequential_test(char id)
@@ -126,6 +133,7 @@ void uniform_random_test(char id)
 
 int main(int argc, char* argv[])
 {
+	std::default_random_engine rnd;
 	//test_hash();
 
 	if (argc < 3)

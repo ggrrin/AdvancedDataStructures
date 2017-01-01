@@ -81,7 +81,7 @@ public:
 template<typename TKey, typename THashFunction>
 class cuckoo_hash_table
 {
-	std::default_random_engine& generator;
+	std::default_random_engine generator;
 	THashFunction hash_function1;
 	THashFunction hash_function2;
 	entry<TKey>* table;
@@ -90,17 +90,18 @@ class cuckoo_hash_table
 	size_t steps;
 	size_t rehash_call_count;
 
-	void insert_(TKey key)
+	bool insert_(TKey key)
 	{
 		steps++;
 
 		auto index = hash_function1.get_hash_code(key);
-		for (size_t i = 0; i < size; ++i)
+		for (size_t i = 0; i <= size; ++i)
 		{
 			if(!table[index].used)
 			{
 				table[index] = entry<TKey>(key);
-				return;
+				size++;
+				return true;
 			}
 			std::swap(key, table[index].value);
 
@@ -111,41 +112,54 @@ class cuckoo_hash_table
 			
 			steps++;
 		}
-
-		rehash();
-		insert_(key);
+		return false;
 	}
 
-	void rehash()
+	bool rehash()
 	{
-		rehash_call_count++;
-
-		hash_function1 = THashFunction(m, generator);
-		hash_function2 = THashFunction(m, generator);
 		
 		entry<TKey>* old_table = table;
 		table = new entry<TKey>[m];
+		size_t prev_size = size;
 
-		size_t remaining_size = size;
-		for (size_t i = 0; i < m; ++i)
+		bool failed = true;
+		do
 		{
-			if(old_table[i].used)
+			rehash_call_count++;
+			size_t remaining_size = prev_size;
+			hash_function1 = THashFunction(m, generator);
+			hash_function2 = THashFunction(m, generator);
+			size = 0;
+			for (size_t i = 0; i < m; ++i)
+				table[i] = entry<TKey>();
+
+			for (size_t i = 0; i < m; ++i)
 			{
-				insert_(old_table[i].value);
-
 				if (remaining_size == 0)
+				{
+					failed = false;
 					break;
+				}
 
-				remaining_size--;
+				if (old_table[i].used)
+				{
+					if (!insert_(old_table[i].value))
+						break;
+					remaining_size--;
+				}
 			}
-		}
+
+			if (should_stop())
+				break;
+		} while (failed);
 
 		delete old_table;
+		return !should_stop();
 	}
 
 public:
 	explicit cuckoo_hash_table(size_t m, std::default_random_engine& generator): 
-		generator(generator), hash_function1(m, generator),
+		hash_function1(m, generator),
 		hash_function2(m, generator), table(new entry<TKey>[m]),size(0),m(m),steps(0),
 		rehash_call_count(0)
 	{ }
@@ -159,7 +173,11 @@ public:
 	void insert(TKey key)
 	{
 		rehash_call_count = 0;
-		insert_(key);
+		while(!insert_(key))
+		{
+			if(!rehash())
+				return;
+		}
 	}
 
 	float get_load_factor() const
@@ -169,7 +187,7 @@ public:
 
 	bool should_stop() const
 	{
-		return rehash_call_count > 10;
+		return rehash_call_count > 20;
 	}
 
 	size_t get_size() const 

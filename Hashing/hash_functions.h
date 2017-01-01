@@ -5,7 +5,7 @@
 #include <random>
 #include <limits>
 
-template<typename TKey,size_t C>
+template<typename TKey, size_t C>
 class tabulation_hash
 {
 	TKey* tables[C];
@@ -41,7 +41,7 @@ public:
 			tables[i] = new TKey[tab_size];
 			for (size_t j = 0; j < tab_size; ++j)
 			{
-				tables[i][j] = distribution(generator); 
+				tables[i][j] = distribution(generator);
 			}
 		}
 
@@ -50,8 +50,24 @@ public:
 
 	~tabulation_hash()
 	{
-		for (size_t i = 0; i < C; i++)
-			delete tables[i];
+		if (tables[0] != nullptr)
+			for (size_t i = 0; i < C; i++)
+				delete tables[i];
+	}
+
+	tabulation_hash& operator=(tabulation_hash&& t)
+	{
+		for (size_t i = 0; i < C; ++i)
+		{
+			tables[i] = t.tables[i];
+			t.tables[i] = nullptr;
+		}
+
+		bit_count = t.bit_count;
+		chunk_bit_count = t.chunk_bit_count;
+		mask = t.mask;
+
+		return *this;
 	}
 
 	TKey get_hash_code(const TKey& value) const
@@ -63,11 +79,15 @@ public:
 			TKey key = (value &(mask << i*chunk_bit_count)) >> i*chunk_bit_count;
 			res ^= tables[i][key];
 		}
-		
+
 		return res;
 	}
-	
+
 };
+
+
+template<typename TKey>
+using  tabulation_hash_c32 = tabulation_hash<TKey, 32>;
 
 template<typename TKey>
 using  tabulation_hash_c16 = tabulation_hash<TKey, 16>;
@@ -76,10 +96,10 @@ template<typename TKey>
 using tabulation_hash_c8 = tabulation_hash<TKey, 8>;
 
 template<typename TKey>
-using tabulation_hash_c4 = tabulation_hash<TKey, 4> ;
+using tabulation_hash_c4 = tabulation_hash<TKey, 4>;
 
 template<typename TKey>
-using tabulation_hash_c2 = tabulation_hash<TKey, 2> ;
+using tabulation_hash_c2 = tabulation_hash<TKey, 2>;
 
 template<typename TKey>
 class mult_hash
