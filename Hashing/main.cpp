@@ -3,6 +3,7 @@
 #include "hash_tables.h"
 #include <chrono>
 
+//testovaci funkce pro hashovaci funkce
 void test_hash()
 {
 	std::default_random_engine generator;
@@ -16,6 +17,7 @@ void test_hash()
 	auto x3 = hf3.get_hash_code(0x00AE0FFFFF);
 }
 
+//nahodny test
 template<typename TTable>
 void uniform_random_test_batch()
 {
@@ -51,16 +53,65 @@ void uniform_random_test_batch()
 	}
 }
 
+
+//pomocny insert sort pro vypocet statistickych hodnot 
+void insert_sort(float* start, float* end)
+{
+	for (auto* i = start; i < end; ++i)
+	{
+		float min = *i;
+		float* min_ptr = i;
+		for (float* st_m = i + 1; st_m < end; ++st_m)
+		{
+			if (min > *st_m)
+			{
+				min = *st_m;
+				min_ptr = st_m;
+			}
+		}
+
+		auto temp = *min_ptr;
+		*min_ptr = *i;
+		*i = temp;
+	}
+}
+
+
+//vypocita a vypise na vystpu statisticke hodnoty
+void report_stats(float* values, int measure_count, size_t table_size)
+{
+	float min, max, average = 0, median, decil;
+	insert_sort(values, values + measure_count);
+
+	min = values[0];
+	max = values[measure_count - 1];
+	if (measure_count % 2 == 0)
+		median = (values[measure_count / 2] + values[measure_count / 2 - 1]) / 2;
+	else
+		median = values[measure_count / 2];
+
+	decil = values[static_cast<int>(0.9 * measure_count) - 1];
+
+	for (int i = 0; i < measure_count; ++i)
+		average += values[i];
+
+	average /= measure_count;
+	
+	printf("%llu %f %f %f %f %f\n", table_size, min, max, average, median, decil);
+}
+
+//sekvencni test
 template<typename TTable>
 void sequential_test_batch()
 {
 	std::default_random_engine generator;
-	for (size_t table_size = 64; table_size < 1025; table_size*=2)
+	for (size_t table_size = 64; table_size < 64*2*2*2*2*2*2*2*2*2*2*2*2*2*2*2*2*2*2*2*2; table_size*=2)
 	{
 		const int measure_count = 10;
-		float average_steps = 0;
+		float values[measure_count];
 		for (auto m = 0; m < measure_count; ++m) 
 		{
+			float average_steps = 0;
 			TTable table(table_size, generator);
 			size_t inserts_in_range = 0;
 
@@ -75,19 +126,20 @@ void sequential_test_batch()
 					break;
 			}
 
-			average_steps += table.get_steps() / static_cast<float>(inserts_in_range);
+			values[m] = table.get_steps() / static_cast<float>(inserts_in_range);
 		}
-		average_steps /= static_cast<float>(measure_count);
 
-		printf("%llu %f\n", table_size, average_steps);
+		report_stats(values, measure_count, table_size);
 	}
 }
 
+//vypise pouziti
 void usage()
 {
 	printf("usage: main.out u|s TEST_NUMBER \nu... random uniform test [1-5] \ns... sequential test for linear probbing [1-2]");
 }
 
+//provede specifikovany sekvencni test
 void sequential_test(char id)
 {
 	switch (id)
@@ -104,6 +156,7 @@ void sequential_test(char id)
 	}
 }
 
+//provede specifikovany nahodny test
 void uniform_random_test(char id)
 {
 	switch (id)

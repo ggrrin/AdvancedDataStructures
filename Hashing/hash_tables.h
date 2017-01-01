@@ -2,6 +2,7 @@
 #define hash_tables_h_
 #include <cstdint>
 
+//polozka hasovaci tabulky 
 template<typename TKey>
 struct entry
 {
@@ -12,6 +13,7 @@ struct entry
 	explicit entry(const TKey& val) :used(true), value(val){}
 };
 
+//tabulka s linearnim pridavanim 
 template<typename TKey, typename THashFunction>
 class linear_probing_hash_table
 {
@@ -32,6 +34,7 @@ public:
 		delete[] table;
 	}
 
+	//vlozi  klic do tabluky
 	void insert(const TKey& key)
 	{
 		steps++;
@@ -50,26 +53,31 @@ public:
 		size++;
 	}
 
+	//urcuje zda by mel byt test zastaven
 	bool should_stop() const
 	{
 		return get_load_factor() > 0.95;
 	}
 
+	//vrati faktor naplneni
 	float get_load_factor() const
 	{
 		return size/static_cast<float>(m);
 	}
 
+	//vrati pocet prvku v tabulce
 	size_t get_size() const 
 	{
 		return size;
 	}
 
+	//vrati pocet kroku od posledniho zavolani reset
 	size_t get_steps() const
 	{
 		return steps;
 	}
 
+	//vynuluje pocet kroku
 	void reset_steps()
 	{
 		steps = 0;
@@ -78,6 +86,7 @@ public:
 };
 
 
+// implmentace kukacci tabulky
 template<typename TKey, typename THashFunction>
 class cuckoo_hash_table
 {
@@ -90,6 +99,7 @@ class cuckoo_hash_table
 	size_t steps;
 	size_t rehash_call_count;
 
+	// vlozi prvek do tabulky
 	bool insert_(TKey key)
 	{
 		steps++;
@@ -115,6 +125,7 @@ class cuckoo_hash_table
 		return false;
 	}
 
+	// provede rehash v kukacci tabulce
 	bool rehash()
 	{
 		
@@ -170,6 +181,7 @@ public:
 	}
 
 	
+	//provede vlozeni popr rehash
 	void insert(TKey key)
 	{
 		rehash_call_count = 0;
@@ -180,26 +192,31 @@ public:
 		}
 	}
 
+	//vrati faktor naplneni
 	float get_load_factor() const
 	{
 		return size/static_cast<float>(m);
 	}
 
+	//vrati zda by mel byt test prerusen
 	bool should_stop() const
 	{
 		return rehash_call_count > 20;
 	}
 
+	//vrati pocet prvku v tabulce
 	size_t get_size() const 
 	{
 		return size;
 	}
 
+	//vrati pocet kroku od posledniho zavolani reset
 	size_t get_steps() const
 	{
 		return steps;
 	}
 
+	//vynuluje pocet kroku
 	void reset_steps()
 	{
 		steps = 0;

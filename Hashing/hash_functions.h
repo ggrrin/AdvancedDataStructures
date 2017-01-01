@@ -5,6 +5,7 @@
 #include <random>
 #include <limits>
 
+//reprezentuje tabulacni heashovaci funkci
 template<typename TKey, size_t C>
 class tabulation_hash
 {
@@ -13,6 +14,7 @@ class tabulation_hash
 	size_t chunk_bit_count;
 	TKey mask;
 
+	//nastavi spravne velkou masku pro vyberl casti identifikatoru
 	void set_mask()
 	{
 		mask = 0;
@@ -25,6 +27,7 @@ class tabulation_hash
 
 public:
 
+	//inicializuje hashovaci funkci a jeji popmocne tabulky
 	explicit tabulation_hash(size_t hashtable_size, std::default_random_engine& generator)
 	{
 		bit_count = 8 * sizeof(TKey);
@@ -55,6 +58,7 @@ public:
 				delete tables[i];
 	}
 
+	//move operator
 	tabulation_hash& operator=(tabulation_hash&& t)
 	{
 		for (size_t i = 0; i < C; ++i)
@@ -70,6 +74,7 @@ public:
 		return *this;
 	}
 
+	//vypocitat hodnotu hashovaci funkce pro zadany vstup
 	TKey get_hash_code(const TKey& value) const
 	{
 		TKey res = 0;
@@ -117,6 +122,7 @@ public:
 		divisor = std::numeric_limits<TKey>::max() / hashtable_size;
 	}
 
+	//vypocitat hodnotu hashovaci funkce pro zadany vstup
 	TKey get_hash_code(const TKey& value) const
 	{
 		return (a * value) / divisor;
@@ -133,6 +139,7 @@ public:
 		hashtable_size = hashtable_size_p;
 	}
 
+	//vypocitat hodnotu hashovaci funkce pro zadany vstup
 	TKey get_hash_code(const TKey& value) const
 	{
 		return value % hashtable_size;
