@@ -139,7 +139,11 @@ class cuckoo_hash_table
 		do
 		{
 			rehash_call_count++;
+
 			size_t remaining_size = prev_size;
+
+			//move constructor is used, because outcome of calling constructor is rvalue
+			//which is assigned to class field. After assignment destructor is called on created rvalue.
 			hash_function1 = THashFunction(m, generator);
 			hash_function2 = THashFunction(m, generator);
 			size = 0;
