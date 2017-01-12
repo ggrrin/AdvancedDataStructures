@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include "hash_tables.h"
 #include <chrono>
+#include <string>
 
 //testovaci funkce pro hashovaci funkce
 void test_hash()
@@ -19,12 +20,12 @@ void test_hash()
 
 //nahodny test
 template<typename TTable>
-void uniform_random_test_batch()
+void uniform_random_test_batch(bool print_time)
 {
-	size_t table_size = 0x001FFFFF;
+	size_t table_size = 1 << 21; // 2^21
 	std::default_random_engine generator;
 
-	std::uniform_int_distribution<uint64_t> distribution(0);
+	std::uniform_int_distribution<uint64_t> distribution(0); //upper bound is set implicitly to numeric limit
 
 	TTable table(table_size, generator);
 
@@ -39,8 +40,7 @@ void uniform_random_test_batch()
 			auto te = std::chrono::steady_clock::now();
 			auto diff = std::chrono::duration_cast<std::chrono::microseconds>(te - ts);
 			table.get_steps();
-			bool printTime = false;
-			if(printTime)
+			if (print_time)
 				printf("%f %f\n", table.get_load_factor(), diff.count() / static_cast<float>(batch));
 			else
 				printf("%f %f\n", table.get_load_factor(), table.get_steps() / static_cast<float>(batch));
@@ -96,7 +96,7 @@ void report_stats(float* values, int measure_count, size_t table_size)
 		average += values[i];
 
 	average /= measure_count;
-	
+
 	printf("%llu %f %f %f %f %f\n", table_size, min, max, average, median, decil);
 }
 
@@ -105,13 +105,12 @@ template<typename TTable>
 void sequential_test_batch()
 {
 	std::default_random_engine generator;
-	for (size_t table_size = 64; table_size < 64*2*2*2*2*2*2*2*2*2*2*2*2*2*2*2*2*2*2*2*2; table_size*=2)
+	for (size_t table_size = 64; table_size < 1 << 26; table_size *= 2)
 	{
-		const int measure_count = 10;
+		const int measure_count = 100000;
 		float values[measure_count];
-		for (auto m = 0; m < measure_count; ++m) 
+		for (auto m = 0; m < measure_count; ++m)
 		{
-			float average_steps = 0;
 			TTable table(table_size, generator);
 			size_t inserts_in_range = 0;
 
@@ -136,7 +135,8 @@ void sequential_test_batch()
 //vypise pouziti
 void usage()
 {
-	printf("usage: main.out u|s TEST_NUMBER \nu... random uniform test [1-5] \ns... sequential test for linear probbing [1-2]");
+	printf("usage: main.out u[t]|s TEST_NUMBER \nu[t]... random uniform test [1-5] ... if t is specified time is measured otherwise counts\ns... sequential test for linear probbing [1-2]");
+	exit(1);
 }
 
 //provede specifikovany sekvencni test
@@ -157,24 +157,24 @@ void sequential_test(char id)
 }
 
 //provede specifikovany nahodny test
-void uniform_random_test(char id)
+void uniform_random_test(char id, bool print_time)
 {
 	switch (id)
 	{
 	case '1':
-		uniform_random_test_batch<linear_probing_hash_table<uint64_t, tabulation_hash_c16<uint64_t>>>();
+		uniform_random_test_batch<linear_probing_hash_table<uint64_t, tabulation_hash_c16<uint64_t>>>(print_time);
 		break;
 	case '2':
-		uniform_random_test_batch<linear_probing_hash_table<uint64_t, mult_hash<uint64_t>>>();
+		uniform_random_test_batch<linear_probing_hash_table<uint64_t, mult_hash<uint64_t>>>(print_time);
 		break;
 	case '3':
-		uniform_random_test_batch<linear_probing_hash_table<uint64_t, naive_mod_hash<uint64_t>>>();
+		uniform_random_test_batch<linear_probing_hash_table<uint64_t, naive_mod_hash<uint64_t>>>(print_time);
 		break;
 	case '4':
-		uniform_random_test_batch<cuckoo_hash_table<uint64_t, tabulation_hash_c16<uint64_t>>>();
+		uniform_random_test_batch<cuckoo_hash_table<uint64_t, tabulation_hash_c16<uint64_t>>>(print_time);
 		break;
 	case '5':
-		uniform_random_test_batch<cuckoo_hash_table<uint64_t, mult_hash<uint64_t>>>();
+		uniform_random_test_batch<cuckoo_hash_table<uint64_t, mult_hash<uint64_t>>>(print_time);
 		break;
 	default:
 		usage();
@@ -189,14 +189,28 @@ int main(int argc, char* argv[])
 	std::default_random_engine rnd;
 	//test_hash();
 
-	if (argc < 3)
+	if (argc != 3)
 		usage();
 	else
 	{
-		if (argv[1][0] == 'u')
-			uniform_random_test(argv[2][0]);
-		else if (argv[1][0] == 's')
-			sequential_test(argv[2][0]);
+		std::string test_type = argv[1];
+		std::string test_number_p = argv[2];
+		for (int i = 0; i < test_number_p.length(); ++i)
+		{
+			if(!(test_number_p[i] >= '0' && test_number_p[i] <= '9'))
+			{
+				usage();
+				return 1;
+			}
+		}
+		int test_number = atoi(test_number_p.c_str());
+		
+		if (test_type == "u")
+			uniform_random_test(test_number, false);
+		else if(test_type == "ut")
+			uniform_random_test(test_number, true);
+		else if (test_type == "s")
+			sequential_test(test_number);
 		else
 			usage();
 	}

@@ -9,8 +9,8 @@ struct entry
 	bool used;
 	TKey value;
 
-	entry() :used(false), value(TKey()){}
-	explicit entry(const TKey& val) :used(true), value(val){}
+	entry() :used(false), value(TKey()) {}
+	explicit entry(const TKey& val) :used(true), value(val) {}
 };
 
 //tabulka s linearnim pridavanim 
@@ -24,8 +24,8 @@ class linear_probing_hash_table
 	size_t steps;
 
 public:
-	explicit linear_probing_hash_table(size_t m, std::default_random_engine& generator): 
-		hash_function(m,generator), table(new entry<TKey>[m]), size(0),m(m),steps(0)
+	explicit linear_probing_hash_table(size_t m, std::default_random_engine& generator) :
+		hash_function(m, generator), table(new entry<TKey>[m]), size(0), m(m), steps(0)
 	{
 	}
 
@@ -35,15 +35,17 @@ public:
 	}
 
 	//vlozi  klic do tabluky
-	void insert(const TKey& key)
+	void insert(TKey key)
 	{
 		steps++;
-		
-		auto hash = hash_function.get_hash_code(key);
-		auto index = hash;
 
-		while (table[index].used && table[index].value != key)
+		auto index = hash_function.get_hash_code(key);
+
+		while (table[index].used)
 		{
+			if (table[index].value == key)
+				return;
+
 			index += 1;
 			index %= m;
 			steps++;
@@ -62,11 +64,11 @@ public:
 	//vrati faktor naplneni
 	float get_load_factor() const
 	{
-		return size/static_cast<float>(m);
+		return size / static_cast<float>(m);
 	}
 
 	//vrati pocet prvku v tabulce
-	size_t get_size() const 
+	size_t get_size() const
 	{
 		return size;
 	}
@@ -107,7 +109,7 @@ class cuckoo_hash_table
 		auto index = hash_function1.get_hash_code(key);
 		for (size_t i = 0; i <= size; ++i)
 		{
-			if(!table[index].used)
+			if (!table[index].used)
 			{
 				table[index] = entry<TKey>(key);
 				size++;
@@ -115,11 +117,11 @@ class cuckoo_hash_table
 			}
 			std::swap(key, table[index].value);
 
-			if(index == hash_function1.get_hash_code(key))
+			if (index == hash_function1.get_hash_code(key))
 				index = hash_function2.get_hash_code(key);
 			else
 				index = hash_function1.get_hash_code(key);
-			
+
 			steps++;
 		}
 		return false;
@@ -128,7 +130,7 @@ class cuckoo_hash_table
 	// provede rehash v kukacci tabulce
 	bool rehash()
 	{
-		
+
 		entry<TKey>* old_table = table;
 		table = new entry<TKey>[m];
 		size_t prev_size = size;
@@ -169,9 +171,9 @@ class cuckoo_hash_table
 	}
 
 public:
-	explicit cuckoo_hash_table(size_t m, std::default_random_engine& generator): 
+	explicit cuckoo_hash_table(size_t m, std::default_random_engine& generator) :
 		hash_function1(m, generator),
-		hash_function2(m, generator), table(new entry<TKey>[m]),size(0),m(m),steps(0),
+		hash_function2(m, generator), table(new entry<TKey>[m]), size(0), m(m), steps(0),
 		rehash_call_count(0)
 	{ }
 
@@ -180,14 +182,14 @@ public:
 		delete[] table;
 	}
 
-	
+
 	//provede vlozeni popr rehash
 	void insert(TKey key)
 	{
 		rehash_call_count = 0;
-		while(!insert_(key))
+		while (!insert_(key))
 		{
-			if(!rehash())
+			if (!rehash())
 				return;
 		}
 	}
@@ -195,7 +197,7 @@ public:
 	//vrati faktor naplneni
 	float get_load_factor() const
 	{
-		return size/static_cast<float>(m);
+		return size / static_cast<float>(m);
 	}
 
 	//vrati zda by mel byt test prerusen
@@ -205,7 +207,7 @@ public:
 	}
 
 	//vrati pocet prvku v tabulce
-	size_t get_size() const 
+	size_t get_size() const
 	{
 		return size;
 	}
