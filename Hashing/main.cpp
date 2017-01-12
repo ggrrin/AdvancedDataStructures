@@ -188,6 +188,7 @@ int main(int argc, char* argv[])
 {
 	std::default_random_engine rnd;
 	//test_hash();
+	tabulation_hash_c8<float> x(12,rnd);
 
 	if (argc != 3)
 		usage();

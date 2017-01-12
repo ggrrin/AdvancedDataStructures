@@ -4,6 +4,8 @@
 #include <math.h>
 #include <random>
 #include <limits>
+#include <stdexcept>
+#include <assert.h>
 
 
 template<typename TKey>
@@ -31,7 +33,16 @@ TKey get_power_of2(TKey key)
 template<typename TKey>
 constexpr bool is_valid_integer_type()
 {
-	return std::numeric_limits<TKey>::is_integer() && !std::numeric_limits<TKey>::is_signed;
+	return std::numeric_limits<TKey>::is_integer && !std::numeric_limits<TKey>::is_signed;
+}
+
+template<typename TKey>
+void check_parameters(TKey hashtable_size)
+{
+	if (!is_valid_integer_type<TKey>())
+		throw std::logic_error("TKey is not unsigned integer.");
+	if (!is_power2(hashtable_size))
+		throw std::logic_error("hash table size is note power of 2");
 }
 
 
@@ -39,11 +50,8 @@ constexpr bool is_valid_integer_type()
 template<typename TKey, size_t C>
 class tabulation_hash
 {
-	static_assert(is_valid_integer_type<TKey>(), "TKey is not unsigned integer.");
-	static_assert(std::numeric_limits<TKey>::digits % C == 0, "TKey bit count is not dividable by C");
-
+	static_assert(is_valid_integer_type<TKey>(), "zz");
 	TKey* tables[C];
-	size_t bit_count;
 	size_t chunk_bit_count;
 	TKey mask;
 
@@ -52,26 +60,23 @@ class tabulation_hash
 public:
 
 	//inicializuje hashovaci funkci a jeji popmocne tabulky
-	explicit tabulation_hash(size_t hashtable_size, std::default_random_engine& generator)
+	explicit tabulation_hash(TKey hashtable_size, std::default_random_engine& generator)
 	{
-		if (!is_power2(hashtable_size))
-			throw std::logic_error("hash table size is note power of 2");
+		check_parameters(hashtable_size);
+		if (std::numeric_limits<TKey>::digits % C != 0)
+			throw std::logic_error("TKey bit count is not dividable by C");
 
-		bit_count = std::numeric_limits<TKey>::digits;//number of non-sign bits
-		chunk_bit_count = bit_count / C;
+		chunk_bit_count = std::numeric_limits<TKey>::digits / C; //::digits.... number of non-sign bits
+		mask = (1 << chunk_bit_count) - 1;
 
 		const auto tab_size = 1 << chunk_bit_count;
-
 		std::uniform_int_distribution<TKey> distribution(0, hashtable_size - 1);
-
 		for (size_t i = 0; i < C; i++)
 		{
 			tables[i] = new TKey[tab_size];
 			for (size_t j = 0; j < tab_size; ++j)
 				tables[i][j] = distribution(generator);
 		}
-
-		mask = (1 << chunk_bit_count) - 1;
 	}
 
 	~tabulation_hash()
@@ -90,7 +95,6 @@ public:
 			t.tables[i] = nullptr;
 		}
 
-		bit_count = t.bit_count;
 		chunk_bit_count = t.chunk_bit_count;
 		mask = t.mask;
 
@@ -132,20 +136,17 @@ using tabulation_hash_c2 = tabulation_hash<TKey, 2>;
 template<typename TKey>
 class mult_hash
 {
-	static_assert(is_valid_integer_type<TKey>(), "TKey is not unsigned integer.");
-
 	TKey a;
 	TKey divisor_power;
 
 public:
-	explicit mult_hash(size_t hashtable_size, std::default_random_engine& generator)
+	explicit mult_hash(TKey hashtable_size, std::default_random_engine& generator)
 	{
-		if (!is_power2(hashtable_size))
-			throw std::logic_error("hash table size is note power of 2");
+		check_parameters(hashtable_size);
 
 		std::uniform_int_distribution<TKey> distribution(1); //upper bound is set implicitly to numeric limit
 		a = distribution(generator);
-		if (a % 2 == 0) //a is not odd
+		if (a % 2 == 0)
 			++a;
 
 		auto hash_table_size_power = get_power_of2(hashtable_size);
@@ -163,20 +164,16 @@ public:
 template<typename TKey>
 class naive_mod_hash
 {
-	static_assert(is_valid_integer_type<TKey>(), "TKey is not unsigned integer.");
-
 	TKey modulo_mask;
 public:
-	explicit naive_mod_hash(size_t hashtable_size, std::default_random_engine& generator)
+	explicit naive_mod_hash(TKey hashtable_size, std::default_random_engine& generator)
 	{
-		if (!is_power2(hashtable_size))
-			throw std::logic_error("hash table size is note power of 2");
-
+		check_parameters(hashtable_size);
 		modulo_mask = hashtable_size - 1;
 	}
 
 	//vypocitat hodnotu hashovaci funkce pro zadany vstup
-	TKey get_hash_code(const TKey& value) const
+	TKey get_hash_code(TKey value) const
 	{
 		return value & modulo_mask;
 	}
