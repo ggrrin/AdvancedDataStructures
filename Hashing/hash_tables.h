@@ -1,6 +1,7 @@
 #ifndef hash_tables_h_
 #define hash_tables_h_
 #include <cstdint>
+#include "hash_functions.h"
 
 //polozka hasovaci tabulky 
 template<typename TKey>
@@ -10,7 +11,7 @@ struct entry
 	TKey value;
 
 	entry() :used(false), value(TKey()) {}
-	explicit entry(const TKey& val) :used(true), value(val) {}
+	explicit entry(TKey val) :used(true), value(val) {}
 };
 
 //tabulka s linearnim pridavanim 
@@ -22,11 +23,14 @@ class linear_probing_hash_table
 	size_t size;
 	size_t m;
 	size_t steps;
+	TKey hashtable_size_mask;
+
 
 public:
 	explicit linear_probing_hash_table(size_t m, std::default_random_engine& generator) :
-		hash_function(m, generator), table(new entry<TKey>[m]), size(0), m(m), steps(0)
+		hash_function(m, generator), table(new entry<TKey>[m]), size(0), m(m), steps(0), hashtable_size_mask(m - 1)
 	{
+		check_parameters(m);
 	}
 
 	~linear_probing_hash_table()
@@ -47,7 +51,7 @@ public:
 				return;
 
 			index += 1;
-			index %= m;
+			index &= hashtable_size_mask; //%
 			steps++;
 		}
 
@@ -58,7 +62,7 @@ public:
 	//urcuje zda by mel byt test zastaven
 	bool should_stop() const
 	{
-		return get_load_factor() > 0.95;
+		return get_load_factor() > 0.98;
 	}
 
 	//vrati faktor naplneni
@@ -101,12 +105,27 @@ class cuckoo_hash_table
 	size_t steps;
 	size_t rehash_call_count;
 
-	// vlozi prvek do tabulky
-	bool insert_(TKey key)
+	//vrati zda tabulka obsahuje dany klic
+	bool contains(TKey key, TKey hash1)
+	{
+		if (table[hash1].used && table[hash1].value == key)
+			return true;
+
+		auto hash2 = hash_function2.get_hash_code(key);
+		return table[hash2].used && table[hash2].value == key;
+	}
+
+	//pokusi se vlozit prvek do tabulky a vrati, zda byl tento
+	//pokus uspesny. V pripade neuspechu je v parametru key
+	//vlozen klic, ktery neni v tabulce
+	bool try_insert(TKey& key)
 	{
 		steps++;
 
 		auto index = hash_function1.get_hash_code(key);
+		if (size > 0 && contains(key, index))
+			return true;
+
 		for (size_t i = 0; i <= size; ++i)
 		{
 			if (!table[index].used)
@@ -115,60 +134,64 @@ class cuckoo_hash_table
 				size++;
 				return true;
 			}
-			std::swap(key, table[index].value);
-
-			if (index == hash_function1.get_hash_code(key))
-				index = hash_function2.get_hash_code(key);
 			else
-				index = hash_function1.get_hash_code(key);
+			{
+				std::swap(key, table[index].value);
 
-			steps++;
+				if (index == hash_function1.get_hash_code(key))
+					index = hash_function2.get_hash_code(key);
+				else
+					index = hash_function1.get_hash_code(key);
+
+				steps++;
+			}
 		}
 		return false;
 	}
 
-	// provede rehash v kukacci tabulce
+	//provede rehash v kukacci tabulce
+	//returns true if successful otherwise false
 	bool rehash()
 	{
-
 		entry<TKey>* old_table = table;
 		table = new entry<TKey>[m];
-		size_t prev_size = size;
+		auto prev_size = size;
 
 		bool failed = true;
 		do
 		{
 			rehash_call_count++;
-
-			size_t remaining_size = prev_size;
-
 			//move constructor is used, because outcome of calling constructor is rvalue
-			//which is assigned to class field. After assignment destructor is called on created rvalue.
+			//which is then assigned to class field. After assignment destructor is called on created rvalue.
 			hash_function1 = THashFunction(m, generator);
 			hash_function2 = THashFunction(m, generator);
-			size = 0;
+
+			size_t remaining_size = prev_size;
+			size = 0;//try_insert modify size field
 			for (size_t i = 0; i < m; ++i)
 				table[i] = entry<TKey>();
 
 			for (size_t i = 0; i < m; ++i)
 			{
-				if (remaining_size == 0)
-				{
-					failed = false;
-					break;
-				}
-
 				if (old_table[i].used)
 				{
-					if (!insert_(old_table[i].value))
+					auto val = old_table[i].value;//try_insert modifies parameter
+					if (try_insert(val))
+					{
+						if (--remaining_size == 0)
+						{
+							failed = false;
+							break;
+						}
+					}
+					else
+					{
+						failed = true;
 						break;
-					remaining_size--;
+					}
 				}
 			}
-
-			if (should_stop())
-				break;
-		} while (failed);
+		} while (!should_stop() && failed);
 
 		delete old_table;
 		return !should_stop();
@@ -179,7 +202,9 @@ public:
 		hash_function1(m, generator),
 		hash_function2(m, generator), table(new entry<TKey>[m]), size(0), m(m), steps(0),
 		rehash_call_count(0)
-	{ }
+	{
+		check_parameters(m);
+	}
 
 	~cuckoo_hash_table()
 	{
@@ -191,7 +216,7 @@ public:
 	void insert(TKey key)
 	{
 		rehash_call_count = 0;
-		while (!insert_(key))
+		while (!try_insert(key))
 		{
 			if (!rehash())
 				return;
@@ -207,7 +232,7 @@ public:
 	//vrati zda by mel byt test prerusen
 	bool should_stop() const
 	{
-		return rehash_call_count > 20;
+		return rehash_call_count > 4;
 	}
 
 	//vrati pocet prvku v tabulce

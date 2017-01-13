@@ -4,25 +4,57 @@
 #include <chrono>
 #include <string>
 
+typedef tabulation_hash_c8<uint64_t> used_tab_hash;
+
 //testovaci funkce pro hashovaci funkce
 void test_hash()
 {
 	std::default_random_engine generator;
-	tabulation_hash_c2<uint64_t> hf1(1024, generator);
+	tabulation_hash_c4<uint64_t> hf1(1llu << 10, generator);
 	auto x1 = hf1.get_hash_code(0x00AE0FFFFF);
 
-	mult_hash<uint64_t> hf2(1341341, generator);
+	mult_hash<uint64_t> hf2(1llu << 28, generator);
 	auto x2 = hf2.get_hash_code(0x00AE0FFFFF);
 
-	naive_mod_hash<uint64_t> hf3(1341341, generator);
+	naive_mod_hash<uint64_t> hf3(1llu << 35, generator);
 	auto x3 = hf3.get_hash_code(0x00AE0FFFFF);
+}
+
+//testovaci funkce pro linearni pridavani
+void linear_probing_test()
+{
+	std::default_random_engine rnd;
+	linear_probing_hash_table<int64_t,tabulation_hash_c16<uint64_t>> t(8, rnd);
+	t.insert(1);
+	t.insert(2);
+	t.insert(1);
+	t.insert(3);
+	t.insert(4);
+	t.insert(5);
+	t.insert(6);
+	t.insert(7);
+	t.insert(8);
+}
+
+//testovaci funkce pro kukacku
+void cucko_test()
+{
+	std::default_random_engine rnd;
+	cuckoo_hash_table<int64_t,tabulation_hash_c16<uint64_t>> t(8, rnd);
+	t.insert(1);
+	t.insert(2);
+	t.insert(1);
+	t.insert(3);
+	t.insert(4);
+	t.insert(5);
+	t.insert(6);
 }
 
 //nahodny test
 template<typename TTable>
 void uniform_random_test_batch(bool print_time)
 {
-	size_t table_size = 1 << 21; // 2^21
+	size_t table_size = 1llu << 21; // 2^21
 	std::default_random_engine generator;
 
 	std::uniform_int_distribution<uint64_t> distribution(0); //upper bound is set implicitly to numeric limit
@@ -34,7 +66,7 @@ void uniform_random_test_batch(bool print_time)
 	for (size_t i = 0; i < table_size; ++i)
 	{
 		table.insert(distribution(generator));
-		const int batch = 10000; //58000;
+		const int batch = 20000; //58000;
 		if (i % batch == 0 && i != 0)
 		{
 			auto te = std::chrono::steady_clock::now();
@@ -97,7 +129,7 @@ void report_stats(float* values, int measure_count, size_t table_size)
 
 	average /= measure_count;
 
-	printf("%llu %f %f %f %f %f\n", table_size, min, max, average, median, decil);
+	printf("%llu %f %f %f %f %f\n", get_power_of2(table_size), min, max, average, median, decil);
 }
 
 //sekvencni test
@@ -105,7 +137,7 @@ template<typename TTable>
 void sequential_test_batch()
 {
 	std::default_random_engine generator;
-	for (size_t table_size = 64; table_size < 1 << 26; table_size *= 2)
+	for (size_t table_size = (1llu << 5); table_size < (1llu << 18/*20*/); table_size *= 2)
 	{
 		const int measure_count = 100000;
 		float values[measure_count];
@@ -139,15 +171,16 @@ void usage()
 	exit(1);
 }
 
+
 //provede specifikovany sekvencni test
 void sequential_test(char id)
 {
 	switch (id)
 	{
-	case '1':
-		sequential_test_batch<linear_probing_hash_table<uint64_t, tabulation_hash_c16<uint64_t>>>();
+	case 1:
+		sequential_test_batch<linear_probing_hash_table<uint64_t, used_tab_hash>>();
 		break;
-	case '2':
+	case 2:
 		sequential_test_batch<linear_probing_hash_table<uint64_t, mult_hash<uint64_t>>>();
 		break;
 	default:
@@ -156,24 +189,25 @@ void sequential_test(char id)
 	}
 }
 
+
 //provede specifikovany nahodny test
-void uniform_random_test(char id, bool print_time)
+void uniform_random_test(int id, bool print_time)
 {
 	switch (id)
 	{
-	case '1':
-		uniform_random_test_batch<linear_probing_hash_table<uint64_t, tabulation_hash_c16<uint64_t>>>(print_time);
+	case 1:
+		uniform_random_test_batch<linear_probing_hash_table<uint64_t, used_tab_hash>>(print_time);
 		break;
-	case '2':
+	case 2:
 		uniform_random_test_batch<linear_probing_hash_table<uint64_t, mult_hash<uint64_t>>>(print_time);
 		break;
-	case '3':
+	case 3:
 		uniform_random_test_batch<linear_probing_hash_table<uint64_t, naive_mod_hash<uint64_t>>>(print_time);
 		break;
-	case '4':
-		uniform_random_test_batch<cuckoo_hash_table<uint64_t, tabulation_hash_c16<uint64_t>>>(print_time);
+	case 4:
+		uniform_random_test_batch<cuckoo_hash_table<uint64_t, used_tab_hash>>(print_time);
 		break;
-	case '5':
+	case 5:
 		uniform_random_test_batch<cuckoo_hash_table<uint64_t, mult_hash<uint64_t>>>(print_time);
 		break;
 	default:
@@ -187,8 +221,6 @@ void uniform_random_test(char id, bool print_time)
 int main(int argc, char* argv[])
 {
 	std::default_random_engine rnd;
-	//test_hash();
-	tabulation_hash_c8<float> x(12,rnd);
 
 	if (argc != 3)
 		usage();
